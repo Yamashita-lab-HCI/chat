@@ -1,5 +1,10 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
+import { createVuesticEssential, VaButton } from 'vuestic-ui'
+import 'vuestic-ui/styles/essential.css'
+import 'vuestic-ui/styles/grid.css'
+import 'vuestic-ui/styles/reset.css'
+import 'vuestic-ui/styles/typography.css'
 
-createApp(App).use(router).mount('#app');
+createApp(App).use(router).use(createVuesticEssential({ components: { VaButton } })).mount('#app');
