@@ -2,17 +2,17 @@
   <div id="app">
     <header>
       <nav>
-        <router-link to="/">ホーム</router-link>
-        <router-link to="/login">ログイン</router-link>
-        <router-link to="/register">登録</router-link>
-        <router-link to="/user-profile">プロファイル</router-link>
+        <router-link to="/">Home</router-link>
+        <router-link to="/login">Login</router-link>
+        <router-link to="/register">Register</router-link>
+        <router-link to="/user-profile">Profile</router-link>
       </nav>
     </header>
     <main>
       <router-view />
     </main>
     <footer>
-      <p>© 2023 マイチャットアプリ</p>
+      <p>2023 Keita Suga</p>
     </footer>
   </div>
 </template>
