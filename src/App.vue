@@ -1,26 +1,43 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div id="app">
+    <header>
+      <nav>
+        <router-link to="/">ホーム</router-link>
+        <router-link to="/login">ログイン</router-link>
+        <router-link to="/register">登録</router-link>
+        <router-link to="/user-profile">プロファイル</router-link>
+      </nav>
+    </header>
+    <main>
+      <router-view />
+    </main>
+    <footer>
+      <p>© 2023 マイチャットアプリ</p>
+    </footer>
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
+  name: 'App'
 }
 </script>
 
 <style>
+/* グローバルなスタイリング */
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+}
+
+nav {
+  /* ナビゲーションバーのスタイリング */
+}
+
+nav a {
+  margin: 0 10px;
+}
+
+footer {
+  margin-top: 20px;
 }
 </style>
