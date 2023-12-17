@@ -1,8 +1,13 @@
 <template>
   <div class="message-list">
-    <div v-for="msg in messages" :key="msg.id" class="message">
-      <strong>{{ msg.user }}:</strong> {{ msg.text }}
-    </div>
+    <va-card v-for="msg in messages" :key="msg.id" class="mb-2" outlined color="primary" gradient>
+      <va-card-title>
+        <va-icon :name="msg.icon" class="user-icon" />{{ msg.user }}
+      </va-card-title>
+      <va-card-content>
+        {{ msg.text }}
+      </va-card-content>
+    </va-card>
   </div>
 </template>
 
@@ -11,11 +16,11 @@ export default {
   name: 'MessageList',
   data() {
     return {
-      // ダミーのメッセージデータ
       messages: [
-        { id: 1, user: 'ユーザー1', text: 'こんにちは！' },
-        { id: 2, user: 'ユーザー2', text: '今日はいい天気ですね。' },
-        { id: 3, user: 'ユーザー3', text: 'そうですね！' }
+        { id: 1, user: 'user1', text: 'こんにちは！', icon: 'mdi-home' },
+        { id: 2, user: 'user2', text: '今日はいい天気ですね。', icon: 'mdiAccountAlert' },
+        { id: 3, user: 'user3', text: 'そうですね！', icon: 'mdi-send' }
+        // 他のメッセージ...
       ]
     };
   }
@@ -23,16 +28,10 @@ export default {
 </script>
 
 <style>
-.message-list {
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 10px;
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
-}
-
-.message {
-  padding: 5px;
-  border-bottom: 1px solid #eee;
+.user-icon {
+  font-size: 24px;
+  /* アイコンのサイズを調整 */
+  margin-right: 8px;
+  vertical-align: middle;
 }
 </style>

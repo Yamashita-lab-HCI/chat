@@ -1,6 +1,13 @@
 <template>
   <div class="home">
-    <h2>チャットルーム</h2>
+    <VaAlert
+      color="primary"
+      border="top"
+      border-color="primary"
+      class="mb-6"
+    >
+    Chatting Room
+    </VaAlert>
     <!-- チャットメッセージのリスト -->
     <message-list></message-list>
     <!-- メッセージ入力フィールド -->
