@@ -1,17 +1,14 @@
 <template>
   <div class="login">
-    <VaBadge
-      text="ログイン画面"
-      color="success"
-      class="mr-2"
-    />
-    <img src="@/assets/chat-icon.svg" alt="Chat Icon" />
-    <h2>ログイン</h2>
-    <form @submit.prevent="onLogin">
-      <input type="text" v-model="username" placeholder="ユーザー名">
-      <input type="password" v-model="password" placeholder="パスワード">
-      <button type="submit">ログイン</button>
-    </form>
+    <va-card class="login-card">
+      <img src="@/assets/chat-icon.svg" alt="Chat Icon" />
+      <h2>ログイン</h2>
+      <form @submit.prevent="onLogin">
+        <va-input v-model="username" placeholder="ユーザー名" />
+        <va-input type="password" v-model="password" placeholder="パスワード" />
+        <va-button type="submit" color="primary">ログイン</va-button>
+      </form>
+    </va-card>
   </div>
 </template>
 
@@ -45,7 +42,6 @@ export default {
 
 
 <style>
-/* 既存のスタイルを維持 */
 
 .login img {
   width: 100px;
@@ -56,6 +52,18 @@ export default {
   /* フォームとの間隔を設定 */
 }
 
-/* 他のスタイル */
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-card {
+  width: 300px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
 </style>
 
