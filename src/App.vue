@@ -10,7 +10,7 @@
           <VaButton color="warning" class="mr-6 mb-2" @click="goToProfile">Profile</VaButton>
         </div>
         <div class="button-wrapper">
-          <VaButton @click="logout">Logout</VaButton>
+          <VaButton @click="logout">Log Out</VaButton>
         </div>
       </nav>
     </header>
