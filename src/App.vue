@@ -1,55 +1,84 @@
 <template>
   <div id="app">
-    <header v-if="loggedIn">
-      <!-- ログイン時のみヘッダーを表示 -->
-      <nav>
-        <div class="button-wrapper">
-          <VaButton color="info" class="mr-6 mb-2" @click="goToHome">Home</VaButton>
-        </div>
-        <div class="button-wrapper">
-          <VaButton color="warning" class="mr-6 mb-2" @click="goToProfile">Profile</VaButton>
-        </div>
-        <div class="button-wrapper">
-          <VaButton @click="logout">Log Out</VaButton>
-        </div>
-      </nav>
-    </header>
-    <main>
-      <router-view />
-    </main>
-    <footer>
-      <p>©️2023 Keita Suga</p>
-    </footer>
+    <div class="container">
+      <va-sidebar v-model:collapsed="isCollapsed" v-if="loggedIn">
+        <va-list>
+          <va-sidebar-item @click="goToHome">
+            <va-sidebar-item-content>
+              <va-icon name="home" size="large" />
+              <va-sidebar-item-title>Home</va-sidebar-item-title>
+            </va-sidebar-item-content>
+          </va-sidebar-item>
+          <va-sidebar-item @click="goToProfile">
+            <va-sidebar-item-content>
+              <va-icon name="person" size="large" />
+              <va-sidebar-item-title>Profile</va-sidebar-item-title>
+            </va-sidebar-item-content>
+          </va-sidebar-item>
+          <va-sidebar-item>
+            <va-sidebar-item-content @click="createNewRoom">
+              <va-icon name="add" size="large" />
+              <va-sidebar-item-title>Create New Room</va-sidebar-item-title>
+            </va-sidebar-item-content>
+          </va-sidebar-item>
+          <va-sidebar-item v-for="room in rooms" :key="room.name" @click="selectRoom(room)">
+            <va-sidebar-item-content>
+              <va-icon name="chat" size="large" />
+              <va-sidebar-item-title>{{ room.name }}</va-sidebar-item-title>
+            </va-sidebar-item-content>
+          </va-sidebar-item>
+          <va-sidebar-item @click="logout">
+            <va-sidebar-item-content>
+              <va-icon name="logout" size="large" />
+              <va-sidebar-item-title>Log Out</va-sidebar-item-title>
+            </va-sidebar-item-content>
+          </va-sidebar-item>
+        </va-list>
+      </va-sidebar>
+      <main class="main-content">
+        <router-view />
+      </main>
+    </div>
   </div>
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex';
+
 export default {
-  name: 'App',
+  name: "App",
 
   data() {
     return {
-      loggedIn: localStorage.getItem('isLoggedIn') === 'true',
+      loggedIn: localStorage.getItem("isLoggedIn") === "true",
     };
   },
 
+  computed: {
+    ...mapState(['rooms', 'currentRoom', 'filteredMessages']),
+  },
+
   methods: {
+    ...mapActions(['selectRoom', 'addRoom']),
     goToHome() {
-      this.$router.push('/home');
-    },
-    goToRegister() {
-      this.$router.push('/register');
+      this.$router.push("/home");
     },
     goToProfile() {
-      this.$router.push('/user-profile');
+      this.$router.push("/user-profile");
     },
     logout() {
-      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem("isLoggedIn");
       this.loggedIn = false;
-      this.$router.push('/login');
+      this.$router.push("/login");
+    },
+    createNewRoom() {
+      const roomName = prompt('新しいチャットルームの名前を入力してください');
+      if (roomName) {
+        this.addRoom(roomName);
+      }
     },
   },
-}
+};
 </script>
 
 <style>
@@ -58,15 +87,23 @@ export default {
   text-align: center;
 }
 
-.button-wrapper {
-  display: inline-block;
-  /* インラインブロック要素として表示 */
-  margin: 0 10px;
-  /* 左右に10ピクセルのマージン */
+.container {
+  display: flex;
 }
 
-nav {
-  /* ナビゲーションバーのスタイリング */
+.sidebar {
+  flex: 0 0 250px; /* サイドバーの幅を250pxに設定 */
+  /* サイドバーのスタイリング */
+}
+
+.main-content {
+  flex: 1; /* 残りのスペースを利用 */
+  /* 本文のスタイリング */
+}
+
+header {
+  text-align: left; /* Align header content to the left */
+  width: 100%; /* Full width */
 }
 
 footer {

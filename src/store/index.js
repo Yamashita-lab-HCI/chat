@@ -1,10 +1,13 @@
 import { createStore } from 'vuex';
-import dummyData from '@/dummyData'; // dummyDataのインポート
+import dummyData from '@/dummyData';
 
 export default createStore({
   state() {
     return {
       messages: dummyData.messages,
+      rooms: [],
+      currentRoom: null,
+      filteredMessages: [],
       isUsernameValid: false,
       isPasswordValid: false,
     };
@@ -15,8 +18,11 @@ export default createStore({
         id: state.messages.length + 1,
         user: 'currentUser',
         text: newMessage,
-        icon: 'mdi-send' // または適切なアイコン
+        icon: 'mdi-send'
       });
+    },
+    addRoom(state, roomName) {
+      state.rooms.push({ name: roomName }); // チャットルームを追加
     },
     updateUsernameValidation(state, isValid) {
       state.isUsernameValid = isValid;
@@ -28,6 +34,12 @@ export default createStore({
   actions: {
     addMessage({ commit }, newMessage) {
       commit('addMessage', newMessage);
+    },
+    addRoom({ commit }, roomName) {
+      commit('addRoom', roomName); // チャットルームを追加するアクション
+    },
+    selectRoom({ commit }, room) {
+      commit('selectRoom', room);
     },
     updateUsernameValidation({ commit }, isValid) {
       commit('updateUsernameValidation', isValid);
