@@ -1,7 +1,12 @@
 <template>
   <div class="message-input">
-    <input type="text" v-model="message" @keyup.enter="sendMessage" placeholder="メッセージを入力...">
-    <button @click="sendMessage">送信</button>
+    <VaInput
+      v-model="message"
+      @keyup.enter="sendMessage"
+      preset="bordered"
+      label="Type your message"
+    />
+    <VaButton @click="sendMessage">Send</VaButton>
   </div>
 </template>
 
