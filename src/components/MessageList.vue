@@ -14,14 +14,12 @@
 </template>
 
 <script>
-import dummyData from '@/dummyData';
+import { mapState } from 'vuex';
 
 export default {
   name: 'MessageList',
-  data() {
-    return {
-      messages: dummyData.messages
-    };
+  computed: {
+    ...mapState(['messages']) // Vuexストアのmessages状態をマッピング
   },
   methods: {
     getIconName(iconName) {
