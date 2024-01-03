@@ -18,7 +18,8 @@
     "vue": "^3.3.12",
     "vue-router": "^4.2.5",
     "vuestic-admin": "^0.0.1-security",
-    "vuestic-ui": "^1.8.7"
+    "vuestic-ui": "^1.8.7",
+    "vuex": "^4.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
