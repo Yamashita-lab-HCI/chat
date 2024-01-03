@@ -21,8 +21,7 @@ export default {
   methods: {
     sendMessage() {
       if (this.message.trim() !== '') {
-        // ここでメッセージを送信するロジックを実装
-        console.log('送信されたメッセージ:', this.message);
+        this.$emit('send', this.message);
         // メッセージをクリア
         this.message = '';
       }
