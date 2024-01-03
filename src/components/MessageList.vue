@@ -24,10 +24,13 @@ export default {
 </script>
 
 <style>
+.va-card-title {
+  display: flex; /* Flexbox を有効化 */
+  align-items: center; /* 垂直方向の中央揃え */
+}
+
 .user-icon {
-  font-size: 24px;
-  /* アイコンのサイズを調整 */
-  margin-right: 8px;
-  vertical-align: middle;
+  font-size: 30px;
+  margin-right: 30px;
 }
 </style>
