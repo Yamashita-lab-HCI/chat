@@ -27,6 +27,11 @@ src/
 |-- main.js # アプリケーションのエントリポイント
 ```
 
+
+# フロントエンド
+**Vue**を使用する．UIはVuestic-UIを使用．
+[こちら](https://ui.vuestic.dev/)を参照すること．
+
 ## Project setup
 ```
 npm install
