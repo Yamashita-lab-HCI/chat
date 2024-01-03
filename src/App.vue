@@ -3,23 +3,30 @@
     <header v-if="loggedIn">
       <!-- ログイン時のみヘッダーを表示 -->
       <nav>
-        <router-link to="/home">Home</router-link>
-        <router-link to="/register">Register</router-link>
-        <router-link to="/user-profile">Profile</router-link>
-        <button @click="logout">Logout</button>
+        <div class="button-wrapper">
+          <VaButton color="info" class="mr-6 mb-2" @click="goToHome">Home</VaButton>
+        </div>
+        <div class="button-wrapper">
+          <VaButton color="danger" class="mr-6 mb-2" @click="goToRegister">Register</VaButton>
+        </div>
+        <div class="button-wrapper">
+          <VaButton color="warning" class="mr-6 mb-2" @click="goToProfile">Profile</VaButton>
+        </div>
+        <div class="button-wrapper">
+          <VaButton @click="logout">Logout</VaButton>
+        </div>
       </nav>
     </header>
     <main>
       <router-view />
     </main>
     <footer>
-      <p>2023 Keita Suga</p>
+      <p>©️2023 Keita Suga</p>
     </footer>
   </div>
 </template>
 
 <script>
-
 export default {
   name: 'App',
 
@@ -30,6 +37,15 @@ export default {
   },
 
   methods: {
+    goToHome() {
+      this.$router.push('/home');
+    },
+    goToRegister() {
+      this.$router.push('/register');
+    },
+    goToProfile() {
+      this.$router.push('/user-profile');
+    },
     logout() {
       localStorage.removeItem('isLoggedIn');
       this.loggedIn = false;
@@ -45,12 +61,15 @@ export default {
   text-align: center;
 }
 
-nav {
-  /* ナビゲーションバーのスタイリング */
+.button-wrapper {
+  display: inline-block;
+  /* インラインブロック要素として表示 */
+  margin: 0 10px;
+  /* 左右に10ピクセルのマージン */
 }
 
-nav a {
-  margin: 0 10px;
+nav {
+  /* ナビゲーションバーのスタイリング */
 }
 
 footer {

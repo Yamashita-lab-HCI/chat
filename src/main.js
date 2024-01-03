@@ -6,10 +6,15 @@ import 'vuestic-ui/styles/essential.css';
 import 'vuestic-ui/styles/grid.css';
 import 'vuestic-ui/styles/reset.css';
 import 'vuestic-ui/styles/typography.css';
+import mdiVue from 'mdi-vue/v3';
+import * as mdijs from '@mdi/js';
 // import 'vuestic-admin/src/scss/icon-fonts/fontelico/fontelico.scss';
 
 
 createApp(App)
+  .use(mdiVue, {
+    icons: mdijs
+  })
   .use(router)
   .use(createVuestic({
     config: {
