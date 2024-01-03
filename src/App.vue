@@ -3,10 +3,18 @@
     <header v-if="loggedIn">
       <!-- ログイン時のみヘッダーを表示 -->
       <nav>
-        <VaButton @click="goToHome">Home</VaButton>
-        <VaButton @click="goToRegister">Register</VaButton>
-        <VaButton @click="goToProfile">Profile</VaButton>
-        <VaButton @click="logout">Logout</vaButton>
+        <div class="button-wrapper">
+          <VaButton color="info" class="mr-6 mb-2" @click="goToHome">Home</VaButton>
+        </div>
+        <div class="button-wrapper">
+          <VaButton color="danger" class="mr-6 mb-2" @click="goToRegister">Register</VaButton>
+        </div>
+        <div class="button-wrapper">
+          <VaButton color="warning" class="mr-6 mb-2" @click="goToProfile">Profile</VaButton>
+        </div>
+        <div class="button-wrapper">
+          <VaButton @click="logout">Logout</VaButton>
+        </div>
       </nav>
     </header>
     <main>
@@ -19,7 +27,6 @@
 </template>
 
 <script>
-
 export default {
   name: 'App',
 
@@ -54,12 +61,15 @@ export default {
   text-align: center;
 }
 
-nav {
-  /* ナビゲーションバーのスタイリング */
+.button-wrapper {
+  display: inline-block;
+  /* インラインブロック要素として表示 */
+  margin: 0 10px;
+  /* 左右に10ピクセルのマージン */
 }
 
-nav a {
-  margin: 0 10px;
+nav {
+  /* ナビゲーションバーのスタイリング */
 }
 
 footer {
