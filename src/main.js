@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
+import store from './store';
 import { createVuestic } from 'vuestic-ui';
 import 'vuestic-ui/styles/essential.css';
 import 'vuestic-ui/styles/grid.css';
@@ -16,6 +17,7 @@ createApp(App)
     icons: mdijs
   })
   .use(router)
+  .use(store)
   .use(createVuestic({
     config: {
       colors: {

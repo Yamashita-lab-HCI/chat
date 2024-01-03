@@ -21,8 +21,7 @@ export default {
   methods: {
     sendMessage() {
       if (this.message.trim() !== '') {
-        // ここでメッセージを送信するロジックを実装
-        console.log('送信されたメッセージ:', this.message);
+        this.$store.dispatch('addMessage', this.message); // Vuexストアのアクションを呼び出す
         // メッセージをクリア
         this.message = '';
       }
