@@ -7,9 +7,6 @@
           <VaButton color="info" class="mr-6 mb-2" @click="goToHome">Home</VaButton>
         </div>
         <div class="button-wrapper">
-          <VaButton color="danger" class="mr-6 mb-2" @click="goToRegister">Register</VaButton>
-        </div>
-        <div class="button-wrapper">
           <VaButton color="warning" class="mr-6 mb-2" @click="goToProfile">Profile</VaButton>
         </div>
         <div class="button-wrapper">
