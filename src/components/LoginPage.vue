@@ -3,11 +3,25 @@
     <va-card class="login-card">
       <img src="@/assets/chat-icon.svg" alt="Chat Icon" />
       <h2>Welcome to my chat app!</h2>
-      <form @submit.prevent="onLogin">
-        <va-input v-model="username" placeholder="ユーザー名" />
-        <va-input type="password" v-model="password" placeholder="パスワード" />
-        <va-button type="submit" color="primary">ログイン</va-button>
+      <form @submit.prevent="onLogin" class="login-form">
+        <div class="form-section">
+        <va-input v-model="username" placeholder="Enter your username" />
+        </div>
+        <div class="form-section">
+        <va-input type="password" v-model="password" placeholder="Enter your password" />
+        </div>
+        <div class="form-section">
+        <VaButton type="submit" class="mr-6 mb-2" color="primary">Log In</VaButton>
+        </div>
       </form>
+      <div class="register-section">
+      <VaBadge
+      text="If you don't have an account yet..."
+      color="#B3D943"
+      class="mr-2"
+      />
+      </div>
+      <VaButton color="danger" class="mr-6 mb-2" @click="goToRegister">Register</VaButton>
     </va-card>
   </div>
 </template>
@@ -40,6 +54,9 @@ export default {
         alert('ユーザー名またはパスワードが間違っています');
       }
     },
+    goToRegister() {
+      this.$router.push('/register');
+    },
   }
 }
 </script>
@@ -67,6 +84,14 @@ export default {
   width: 300px;
   padding: 20px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.login-form .form-section {
+  margin-bottom: 10px; /* Adjust this value as needed */
+}
+
+.login-card .register-section {
+  margin-bottom: 10px;
 }
 
 </style>
