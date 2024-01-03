@@ -12,16 +12,12 @@
 </template>
 
 <script>
+import dummyData from '@/dummyData'
 export default {
   name: 'MessageList',
   data() {
     return {
-      messages: [
-        { id: 1, user: 'user1', text: 'こんにちは！', icon: 'mdi-home' },
-        { id: 2, user: 'user2', text: '今日はいい天気ですね。', icon: 'mdiAccountAlert' },
-        { id: 3, user: 'user3', text: 'そうですね！', icon: 'mdi-send' }
-        // 他のメッセージ...
-      ]
+      messages: dummyData.messages
     };
   }
 };

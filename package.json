@@ -10,6 +10,7 @@
   "dependencies": {
     "@vuestic/ag-grid-theme": "^1.0.3",
     "core-js": "^3.8.3",
+    "mitt": "^3.0.1",
     "vue": "^3.3.12",
     "vue-router": "^4.2.5",
     "vuestic-admin": "^0.0.1-security",

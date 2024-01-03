@@ -1,9 +1,9 @@
 <template>
   <div id="app">
-    <header v-if="isLoggedIn">
+    <header v-if="loggedIn">
       <!-- ログイン時のみヘッダーを表示 -->
       <nav>
-        <router-link to="/">Home</router-link>
+        <router-link to="/home">Home</router-link>
         <router-link to="/register">Register</router-link>
         <router-link to="/user-profile">Profile</router-link>
         <button @click="logout">Logout</button>
@@ -19,21 +19,23 @@
 </template>
 
 <script>
+
 export default {
   name: 'App',
-  computed: {
-    isLoggedIn() {
-      // ローカルストレージからログイン状態をチェック
-      return localStorage.getItem('isLoggedIn') === 'true';
-    }
+
+  data() {
+    return {
+      loggedIn: localStorage.getItem('isLoggedIn') === 'true',
+    };
   },
 
   methods: {
     logout() {
-      localStorage.removeItem('isLoggedIn'); // ログイン状態をローカルストレージから削除
-      this.$router.push('/login'); // ログインページにリダイレクト
-    }
-  }
+      localStorage.removeItem('isLoggedIn');
+      this.loggedIn = false;
+      this.$router.push('/login');
+    },
+  },
 }
 </script>
 
