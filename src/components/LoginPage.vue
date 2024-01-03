@@ -30,6 +30,7 @@ export default {
       const user = dummyData.users.find(u => u.username === this.username && u.password === this.password);
       if (user) {
         // ログイン成功
+        alert('ログインします、指示があるまでログアウトしないでください！！');
         localStorage.setItem('isLoggedIn', 'true');
         this.$root.loggedIn = true; // ルートインスタンスのデータを更新
         console.log("ログイン成功");
