@@ -11,11 +11,12 @@
     <!-- チャットメッセージのリスト -->
     <message-list></message-list>
     <!-- メッセージ入力フィールド -->
-    <message-input></message-input>
+    <message-input @send="addMessage"></message-input>
   </div>
 </template>
 
 <script>
+import dummyData from '@/dummyData';
 import MessageList from '@/components/MessageList.vue';
 import MessageInput from '@/components/MessageInput.vue';
 
@@ -24,6 +25,16 @@ export default {
   components: {
     MessageList,
     MessageInput
+  },
+  methods: {
+    addMessage(newMessage) {
+      dummyData.messages.push({
+        id: dummyData.messages.length + 1,
+        user: 'currentUser',
+        text: newMessage,
+        icon: 'mdi-send'
+      });
+    }
   }
 }
 </script>
