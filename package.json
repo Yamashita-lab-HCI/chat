@@ -12,6 +12,7 @@
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
     "@vuestic/ag-grid-theme": "^1.0.3",
+    "axios": "^1.6.8",
     "core-js": "^3.8.3",
     "mdi-vue": "^3.0.13",
     "mitt": "^3.0.1",
