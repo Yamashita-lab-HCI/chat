@@ -28,8 +28,8 @@
 
 
 <script>
-import dummyData from '@/dummyData'; // ダミーデータをインポート
-
+// import dummyData from '@/dummyData'; // ダミーデータをインポート
+import axios from 'axios';
 
 export default {
   name: 'LoginPage',
@@ -40,24 +40,23 @@ export default {
     };
   },
   methods: {
-    onLogin() {
-      const user = dummyData.users.find(u => u.username === this.username && u.password === this.password);
-      if (user) {
-        // ログイン成功
-        alert('ログインします、指示があるまでログアウトしないでください！！');
-        localStorage.setItem('isLoggedIn', 'true');
-        this.$root.loggedIn = true; // ルートインスタンスのデータを更新
-        console.log("ログイン成功");
-        this.$router.push('/home'); // ホームページに遷移
-      } else {
-        // ログイン失敗
-        alert('ユーザー名またはパスワードが間違っています');
-      }
-    },
-    goToRegister() {
-      this.$router.push('/register');
-    },
-  }
+  onLogin() {
+    axios.post('http://your-backend-url/api/login/', {
+      username: this.username,
+      password: this.password
+    })
+    .then(response => {
+      console.log('Login response:', response);
+      alert('ログイン成功');
+      localStorage.setItem('isLoggedIn', 'true');
+      this.$router.push('/home');
+    })
+    .catch(error => {
+      console.error('Login error:', error); 
+      alert('ユーザー名またはパスワードが間違っています');
+    });
+  },
+}
 }
 </script>
 
