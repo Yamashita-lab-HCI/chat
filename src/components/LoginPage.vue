@@ -40,24 +40,32 @@ export default {
     };
   },
   methods: {
-  onLogin() {
-    axios.post('http://your-backend-url/api/login/', {
-      username: this.username,
-      password: this.password
-    })
-    .then(response => {
-      console.log('Login response:', response);
-      alert('ログイン成功');
-      localStorage.setItem('isLoggedIn', 'true');
-      this.$router.push('/home');
-    })
-    .catch(error => {
-      console.error('Login error:', error); 
-      alert('ユーザー名またはパスワードが間違っています');
-    });
+    onLogin() {
+      axios.post('http://127.0.0.1:8000/api/login/', {
+        username: this.username,
+        password: this.password
+      })
+      .then(response => {
+        if(response.data.status=="success"){
+          console.log('Login response:', response);
+          alert('ログイン成功');
+          localStorage.setItem('isLoggedIn', 'true');
+          this.$router.push('/home');
+        } else {
+          console.log('Login failed:', response)
+          alert('ログイン失敗');
+        }
+      })
+      .catch(error => {
+        console.error('Login error:', error); 
+        alert('ユーザー名またはパスワードが間違っています');
+      });
+    },
+    goToRegister() {
+      this.$router.push('/register');
+    },
   },
-}
-}
+};
 </script>
 
 
