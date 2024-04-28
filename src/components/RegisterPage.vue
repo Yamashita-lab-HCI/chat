@@ -11,7 +11,8 @@
 
 <script>
 import { mapState, mapActions } from 'vuex';
-import dummyData from '@/dummyData';
+// import dummyData from '@/dummyData';
+import axios from 'axios';
 
 export default {
   name: 'RegisterPage',
@@ -32,6 +33,7 @@ export default {
   methods: {
     ...mapActions(['updateUsernameValidation', 'updatePasswordValidation']),
     checkUsername() {
+      /*
       const userExists = dummyData.users.some(user => user.username === this.username);
       if (userExists || !this.username) {
         this.usernameError = 'This username is already taken or invalid.';
@@ -40,6 +42,24 @@ export default {
         this.usernameError = '';
         this.updateUsernameValidation(true);
       }
+      */
+     axios.post('/api/check_username', { username: this.username })
+        .then(response => {
+          if (!response.data.isValid) {
+            this.usernameError = 'This username is already taken or invalid.';
+            this.updateUsernameValidation(false);
+          } else {
+            this.usernameError = '';
+            this.updateUsernameValidation(true);
+          }
+        })
+        .catch(error => {
+          if (error.response && error.response.data && error.response.data.message) {
+            this.usernameError = error.response.data.message;
+          } else {
+            this.usernameError = 'Network error or server is unreachable.';
+          }
+        });
     },
     checkPassword() {
       if (this.password.length < 6) {
@@ -51,9 +71,25 @@ export default {
       }
     },
     registerUser() {
+      /*
       if (this.isFormValid) {
         dummyData.users.push({ username: this.username, password: this.password });
         this.$router.push('/login');
+      }
+      */
+     if (this.isFormValid) {
+        axios.post('/api/register', {
+          username: this.username,
+          password: this.password
+        }, {
+          headers: {
+              'X-CSRFToken': window.csrfToken
+          }
+        }).then(() => {
+          this.$router.push('/login');
+        }).catch(error => {
+          this.passwordError = 'Registration failed: ' + (error.response ? error.response.data.message : 'Server error');
+        });
       }
     },
   },
