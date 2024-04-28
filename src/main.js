@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import store from './store';
+import axios from 'axios';
 import { createVuestic } from 'vuestic-ui';
 import 'vuestic-ui/styles/essential.css';
 import 'vuestic-ui/styles/grid.css';
@@ -11,6 +12,11 @@ import mdiVue from 'mdi-vue/v3';
 import * as mdijs from '@mdi/js';
 // import 'vuestic-admin/src/scss/icon-fonts/fontelico/fontelico.scss';
 
+
+axios.interceptors.request.use(config => {
+    config.headers['X-CSRFToken'] = window.csrfToken;
+    return config;
+});
 
 createApp(App)
   .use(mdiVue, {

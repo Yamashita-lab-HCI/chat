@@ -44,8 +44,11 @@ export default {
       axios.post('http://127.0.0.1:8000/api/login/', {
         username: this.username,
         password: this.password
-      })
-      .then(response => {
+      }, {
+        headers: {
+          'X-CSRFToken': window.csrfToken
+        }
+      }).then(response => {
         if(response.data.status=="success"){
           console.log('Login response:', response);
           alert('ログイン成功');

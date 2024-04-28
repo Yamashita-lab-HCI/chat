@@ -43,8 +43,11 @@ export default {
         this.updateUsernameValidation(true);
       }
       */
-     axios.post('/api/check_username', { username: this.username })
-        .then(response => {
+      axios.post('/api/check_username/', { username: this.username }, {
+        headers: {
+          'X-CSRFToken': window.csrfToken,
+        }
+      }).then(response => {
           if (!response.data.isValid) {
             this.usernameError = 'This username is already taken or invalid.';
             this.updateUsernameValidation(false);
@@ -78,7 +81,7 @@ export default {
       }
       */
      if (this.isFormValid) {
-        axios.post('/api/register', {
+        axios.post('/api/register/', {
           username: this.username,
           password: this.password
         }, {
