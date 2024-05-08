@@ -6,7 +6,7 @@
     <div class="chat-container">
       <!-- チャットメッセージのリストとメッセージ入力フィールドを包含するコンテナ -->
       <div class="chat-section">
-        <message-list></message-list>
+        <message-list :messages="messages"></message-list>
         <message-input @send="addMessage"></message-input>
       </div>
       <!-- プロンプト表示部分 -->

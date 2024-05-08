@@ -68,16 +68,17 @@ export default {
         )
         .then((response) => {
           if (response.data && response.data.status == "success") {
-            alert("ログイン成功");
-            localStorage.setItem("isLoggedIn", "true");
+            alert("Login Sccess!");
             router.push("/home");
           } else {
-            alert("ログイン失敗");
+            alert("Login Failed!" + response.data.message);
           }
         })
         .catch((error) => {
           console.error(error);
-          alert("ユーザー名またはパスワードが間違っています");
+          alert(
+            "Incorrect username or password!" + error.response.data.message
+          );
         });
     };
 

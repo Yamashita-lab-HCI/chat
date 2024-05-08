@@ -15,7 +15,6 @@
 
 <script>
 // import { mapState } from 'vuex';
-import axios from "axios";
 import { MdIcon } from "mdi-vue";
 
 export default {
@@ -23,27 +22,12 @@ export default {
   components: {
     MdIcon,
   },
-  data() {
-    return {
-      messages: [],
-    };
-  },
-  mounted() {
-    this.fetchMessages();
+  props: {
+    messages: Array,
   },
   methods: {
     getIconName(iconName) {
       return iconName.replace(/mdi-/, "");
-    },
-    fetchMessages() {
-      axios
-        .get("/api/messages/")
-        .then((response) => {
-          this.messages = response.data;
-        })
-        .catch((error) => {
-          console.error("Error fetching messages:", error);
-        });
     },
   },
 };

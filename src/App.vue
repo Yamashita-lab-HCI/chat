@@ -21,7 +21,11 @@
               <va-sidebar-item-title>Create New Room</va-sidebar-item-title>
             </va-sidebar-item-content>
           </va-sidebar-item>
-          <va-sidebar-item v-for="room in rooms" :key="room.name" @click="selectRoom(room)">
+          <va-sidebar-item
+            v-for="room in rooms"
+            :key="room.name"
+            @click="selectRoom(room)"
+          >
             <va-sidebar-item-content>
               <va-icon name="chat" size="large" />
               <va-sidebar-item-title>{{ room.name }}</va-sidebar-item-title>
@@ -43,7 +47,8 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import axios from "axios";
+import { mapState, mapActions } from "vuex";
 
 export default {
   name: "App",
@@ -55,11 +60,11 @@ export default {
   },
 
   computed: {
-    ...mapState(['rooms', 'currentRoom', 'filteredMessages']),
+    ...mapState(["rooms", "currentRoom", "filteredMessages"]),
   },
 
   methods: {
-    ...mapActions(['selectRoom', 'addRoom']),
+    ...mapActions(["selectRoom", "addRoom"]),
     goToHome() {
       this.$router.push("/home");
     },
@@ -67,16 +72,27 @@ export default {
       this.$router.push("/user-profile");
     },
     logout() {
-      localStorage.removeItem("isLoggedIn");
-      this.loggedIn = false;
-      this.$router.push("/login");
+      axios
+        .post("/api/logout")
+        .then(() => {
+          this.loggedIn = false;
+          this.$router.push("/login");
+        })
+        .catch((error) => {
+          console.error("Failed to log out:", error);
+        });
     },
     createNewRoom() {
-      const roomName = prompt('新しいチャットルームの名前を入力してください');
+      const roomName = prompt("新しいチャットルームの名前を入力してください");
       if (roomName) {
         this.addRoom(roomName);
       }
     },
+  },
+  created() {
+    // 初期ログイン状態のチェック
+    this.loggedIn =
+      this.$route.meta.requiresAuth && this.$store.getters.isAuthenticated;
   },
 };
 </script>
