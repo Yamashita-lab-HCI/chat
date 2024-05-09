@@ -53,7 +53,9 @@ import { mapState, mapActions } from "vuex";
 export default {
   name: "App",
   computed: {
-    ...mapState(["isAuthenticated"]),
+    ...mapState({
+      isAuthenticated: (state) => state.isLoggedIn,
+    }),
   },
   data() {
     return {
