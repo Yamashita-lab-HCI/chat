@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div class="container">
-      <va-sidebar v-model:collapsed="isCollapsed" v-if="loggedIn">
+      <va-sidebar v-model:collapsed="isCollapsed" v-if="isAuthenticated">
         <va-list>
           <va-sidebar-item @click="goToHome">
             <va-sidebar-item-content>
@@ -15,8 +15,8 @@
               <va-sidebar-item-title>Profile</va-sidebar-item-title>
             </va-sidebar-item-content>
           </va-sidebar-item>
-          <va-sidebar-item>
-            <va-sidebar-item-content @click="createNewRoom">
+          <va-sidebar-item @click="createNewRoom">
+            <va-sidebar-item-content>
               <va-icon name="add" size="large" />
               <va-sidebar-item-title>Create New Room</va-sidebar-item-title>
             </va-sidebar-item-content>
@@ -52,19 +52,19 @@ import { mapState, mapActions } from "vuex";
 
 export default {
   name: "App",
-
+  computed: {
+    ...mapState(["isAuthenticated"]),
+  },
   data() {
     return {
-      loggedIn: localStorage.getItem("isLoggedIn") === "true",
+      isCollapsed: false,
     };
   },
-
-  computed: {
-    ...mapState(["rooms", "currentRoom", "filteredMessages"]),
+  created() {
+    this.fetchAuthentication();
   },
-
   methods: {
-    ...mapActions(["selectRoom", "addRoom"]),
+    ...mapActions(["logOut", "selectRoom", "addRoom", "fetchAuthentication"]),
     goToHome() {
       this.$router.push("/home");
     },
@@ -72,57 +72,63 @@ export default {
       this.$router.push("/user-profile");
     },
     logout() {
+      const csrfToken = this.getCookie("csrftoken");
       axios
-        .post("/api/logout")
+        .post(
+          process.env.VUE_APP_BASE_URL + "logout/",
+          {},
+          {
+            headers: {
+              "X-CSRFToken": csrfToken,
+            },
+          }
+        )
         .then(() => {
-          this.loggedIn = false;
+          this.logOut();
           this.$router.push("/login");
         })
         .catch((error) => {
           console.error("Failed to log out:", error);
+          alert(
+            `Logout failed: ${error.response.data.detail || "Please try again."}`
+          );
         });
     },
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
     createNewRoom() {
-      const roomName = prompt("新しいチャットルームの名前を入力してください");
+      const roomName = prompt("Enter a name for the new chat room:");
       if (roomName) {
-        this.addRoom(roomName);
+        this.addRoom({ name: roomName });
       }
     },
-  },
-  created() {
-    // 初期ログイン状態のチェック
-    this.loggedIn =
-      this.$route.meta.requiresAuth && this.$store.getters.isAuthenticated;
   },
 };
 </script>
 
 <style>
-/* グローバルなスタイリング */
 #app {
   text-align: center;
 }
-
 .container {
   display: flex;
 }
-
 .sidebar {
-  flex: 0 0 250px; /* サイドバーの幅を250pxに設定 */
-  /* サイドバーのスタイリング */
+  flex: 0 0 250px;
 }
-
 .main-content {
-  flex: 1; /* 残りのスペースを利用 */
-  /* 本文のスタイリング */
-}
-
-header {
-  text-align: left; /* Align header content to the left */
-  width: 100%; /* Full width */
-}
-
-footer {
-  margin-top: 20px;
+  flex: 1;
 }
 </style>

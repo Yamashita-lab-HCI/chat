@@ -35,27 +35,31 @@
 </template>
 
 <script>
-// import dummyData from '@/dummyData'; // ダミーデータをインポート
 import axios from "axios";
 import { useRouter } from "vue-router";
 import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
 
 export default {
   name: "LoginPage",
   setup() {
     const router = useRouter();
+    const store = useStore();
     const username = ref("");
     const password = ref("");
     const csrfToken = ref("");
 
     onMounted(() => {
-      csrfToken.value = window.csrfToken;
+      csrfToken.value = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("csrftoken"))
+        ?.split("=")[1];
     });
 
     const onLogin = () => {
       axios
         .post(
-          "http://127.0.0.1:8000/api/login/",
+          process.env.VUE_APP_BASE_URL + "login/",
           {
             username: username.value,
             password: password.value,
@@ -68,16 +72,18 @@ export default {
         )
         .then((response) => {
           if (response.data && response.data.status == "success") {
-            alert("Login Sccess!");
+            store.dispatch("logIn");
+            alert("Login Success!");
             router.push("/home");
           } else {
-            alert("Login Failed!" + response.data.message);
+            alert("Login Failed! " + (response.data?.message || ""));
           }
         })
         .catch((error) => {
           console.error(error);
           alert(
-            "Incorrect username or password!" + error.response.data.message
+            "Incorrect username or password! " +
+              (error.response?.data?.message || "Unknown error")
           );
         });
     };

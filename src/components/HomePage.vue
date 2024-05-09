@@ -36,7 +36,7 @@ export default {
     addMessage(newMessage) {
       const username = localStorage.getItem("username");
       axios
-        .post("/api/messages/", {
+        .post(process.env.VUE_APP_BASE_URL + "messages/", {
           username: username,
           message: newMessage,
         })
