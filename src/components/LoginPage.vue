@@ -74,7 +74,9 @@ export default {
           if (response.data && response.data.status == "success") {
             store.dispatch("logIn");
             alert("Login Success!");
-            router.push("/home");
+            router.push("/home").then(() => {
+              location.reload();
+            });
           } else {
             alert("Login Failed! " + (response.data?.message || ""));
           }

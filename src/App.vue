@@ -68,13 +68,16 @@ export default {
   methods: {
     ...mapActions(["logOut", "selectRoom", "addRoom", "fetchAuthentication"]),
     goToHome() {
-      this.$router.push("/home");
+      this.$router.push("/home").then(() => {
+        location.reload();
+      });
     },
     goToProfile() {
       this.$router.push("/user-profile");
     },
     logout() {
       const csrfToken = this.getCookie("csrftoken");
+      console.log("CSRF Token:", csrfToken); // トークンの確認
       axios
         .post(
           process.env.VUE_APP_BASE_URL + "logout/",
