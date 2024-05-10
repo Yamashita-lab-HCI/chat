@@ -31,6 +31,7 @@ export default {
   },
   mounted() {
     this.fetchMessages();
+    this.fetchCurrentUser();
   },
   methods: {
     addMessage(newMessage) {
@@ -59,12 +60,22 @@ export default {
     },
     fetchMessages() {
       axios
-        .get("/api/messages")
+        .get(process.env.VUE_APP_BASE_URL + "messages/")
         .then((response) => {
           this.messages = response.data;
         })
         .catch((error) => {
           console.error("Error fetching messages:", error);
+        });
+    },
+    fetchCurrentUser() {
+      axios
+        .get(process.env.VUE_APP_BASE_URL + "get_current_user/")
+        .then((response) => {
+          this.currentUser = response.data;
+        })
+        .catch((error) => {
+          console.error("Error fetching current user:", error);
         });
     },
   },
