@@ -33,6 +33,11 @@ export default {
     this.$store.dispatch("fetchMessages");
     this.$store.dispatch("fetchCurrentUser");
   },
+  computed: {
+    messages() {
+      return this.$store.state.messages;
+    },
+  },
   methods: {
     addMessage(newMessage) {
       this.$store.dispatch("addMessage", newMessage);

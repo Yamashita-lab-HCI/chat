@@ -108,7 +108,7 @@ export default {
       if (this.isFormValid) {
         axios
           .post(
-            "/api/register/",
+            process.env.VUE_APP_BASE_URL + "register/",
             {
               username: this.username,
               password: this.password,

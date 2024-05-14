@@ -1,11 +1,12 @@
+// import Vue from "vue";
 import { createStore } from "vuex";
 import axios from "axios"; // Axios をインポート
-import dummyData from "@/dummyData";
+// import dummyData from "@/dummyData";
 
 export default createStore({
   state() {
     return {
-      messages: dummyData.messages,
+      messages: [],
       rooms: [],
       currentRoom: null,
       currentUser: null,
@@ -23,7 +24,10 @@ export default createStore({
       state.currentUser = user;
     },
     updateMessage(state, newMessage) {
-      Vue.set(state.messages, state.messages.length, newMessage);
+      state.messages.push(newMessage);
+    },
+    setMessages(state, messages) {
+      state.messages = messages;
     },
     addRoom(state, roomName) {
       state.rooms.push({ name: roomName });
@@ -48,6 +52,7 @@ export default createStore({
         });
     },
     fetchCurrentUser({ commit }) {
+      console.log("fetchMessages action called");
       axios
         .get(process.env.VUE_APP_BASE_URL + "get_current_user/")
         .then((response) => {
@@ -58,12 +63,22 @@ export default createStore({
           console.error("Error fetching current user:", error);
         });
     },
-    addMessage({ commit, state }, newMessage) {
-      if (!state.currentUser) {
-        console.error("currentUser is not set");
+    fetchMessages({ commit }) {
+      axios
+        .get(process.env.VUE_APP_BASE_URL + "messages/")
+        .then((response) => {
+          commit("setMessages", response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching messages:", error);
+        });
+    },
+    addMessage({ commit }, newMessage) {
+      const username = localStorage.getItem("username");
+      if (!username) {
+        console.error("Username is not set");
         return;
       }
-      const username = state.currentUser.username;
       axios
         .post(process.env.VUE_APP_BASE_URL + "messages/", {
           username: username,
