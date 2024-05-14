@@ -6,7 +6,7 @@
     <div class="chat-container">
       <!-- チャットメッセージのリストとメッセージ入力フィールドを包含するコンテナ -->
       <div class="chat-section">
-        <message-list></message-list>
+        <message-list :messages="messages"></message-list>
         <message-input @send="addMessage"></message-input>
       </div>
       <!-- プロンプト表示部分 -->
@@ -20,7 +20,7 @@
 import MessageList from "@/components/MessageList.vue";
 import MessageInput from "@/components/MessageInput.vue";
 import PromptDisplay from "@/components/PromptDisplay.vue";
-import axios from "axios";
+// import axios from "axios";
 
 export default {
   name: "HomePage",
@@ -30,42 +30,17 @@ export default {
     PromptDisplay,
   },
   mounted() {
-    this.fetchMessages();
+    this.$store.dispatch("fetchMessages");
+    this.$store.dispatch("fetchCurrentUser");
+  },
+  computed: {
+    messages() {
+      return this.$store.state.messages;
+    },
   },
   methods: {
     addMessage(newMessage) {
-      const username = localStorage.getItem("username");
-      axios
-        .post("/api/messages/", {
-          username: username,
-          message: newMessage,
-        })
-        .then(() => {
-          console.log("Message posted successfully");
-        })
-        .catch((error) => {
-          console.error("Failed to post message:", error);
-          console.error("Detailed error:", error.response.data); // エラーの詳細情報をログに記録
-          alert(`Error: ${error.response.data.message}`);
-        });
-      /*
-      dummyData.messages.push({
-        id: dummyData.messages.length + 1,
-        user: 'currentUser',
-        text: newMessage,
-        icon: 'mdi-send'
-      });
-      */
-    },
-    fetchMessages() {
-      axios
-        .get("/api/messages")
-        .then((response) => {
-          this.messages = response.data;
-        })
-        .catch((error) => {
-          console.error("Error fetching messages:", error);
-        });
+      this.$store.dispatch("addMessage", newMessage);
     },
   },
 };

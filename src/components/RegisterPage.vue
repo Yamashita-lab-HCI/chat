@@ -1,37 +1,52 @@
 <template>
   <div class="register">
-    <VaInput v-model="username" @input="checkUsername" :success="isUsernameValid && !usernameError" :error="usernameError.length > 0" :error-messages="usernameError" label="Username"
-      placeholder="Enter your username" />
-    <VaInput v-model="password" @input="checkPassword" :success="isPasswordValid && !passwordError" :error="passwordError.length > 0" :error-messages="passwordError" label="Password(at least 6 characters)"
-      placeholder="Enter your password" type="password" />
+    <VaInput
+      v-model="username"
+      @input="checkUsername"
+      :success="isUsernameValid && !usernameError"
+      :error="usernameError.length > 0"
+      :error-messages="usernameError"
+      label="Username"
+      placeholder="Enter your username"
+    />
+    <VaInput
+      v-model="password"
+      @input="checkPassword"
+      :success="isPasswordValid && !passwordError"
+      :error="passwordError.length > 0"
+      :error-messages="passwordError"
+      label="Password(at least 6 characters)"
+      placeholder="Enter your password"
+      type="password"
+    />
     <div></div>
     <VaButton v-if="isFormValid" @click="registerUser">Register</VaButton>
   </div>
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import { mapState, mapActions } from "vuex";
 // import dummyData from '@/dummyData';
-import axios from 'axios';
+import axios from "axios";
 
 export default {
-  name: 'RegisterPage',
+  name: "RegisterPage",
   data() {
     return {
-      username: '',
-      password: '',
-      usernameError: '',
-      passwordError: '',
+      username: "",
+      password: "",
+      usernameError: "",
+      passwordError: "",
     };
   },
   computed: {
-    ...mapState(['isUsernameValid', 'isPasswordValid']),
+    ...mapState(["isUsernameValid", "isPasswordValid"]),
     isFormValid() {
       return this.isUsernameValid && this.isPasswordValid;
     },
   },
   methods: {
-    ...mapActions(['updateUsernameValidation', 'updatePasswordValidation']),
+    ...mapActions(["updateUsernameValidation", "updatePasswordValidation"]),
     checkUsername() {
       /*
       const userExists = dummyData.users.some(user => user.username === this.username);
@@ -43,33 +58,43 @@ export default {
         this.updateUsernameValidation(true);
       }
       */
-      axios.post('/api/check_username/', { username: this.username }, {
-        headers: {
-          'X-CSRFToken': window.csrfToken,
-        }
-      }).then(response => {
+      axios
+        .post(
+          process.env.VUE_APP_BASE_URL + "check_username/",
+          { username: this.username },
+          {
+            headers: {
+              "X-CSRFToken": window.csrfToken,
+            },
+          }
+        )
+        .then((response) => {
           if (!response.data.isValid) {
-            this.usernameError = 'This username is already taken or invalid.';
+            this.usernameError = "This username is already taken or invalid.";
             this.updateUsernameValidation(false);
           } else {
-            this.usernameError = '';
+            this.usernameError = "";
             this.updateUsernameValidation(true);
           }
         })
-        .catch(error => {
-          if (error.response && error.response.data && error.response.data.message) {
+        .catch((error) => {
+          if (
+            error.response &&
+            error.response.data &&
+            error.response.data.message
+          ) {
             this.usernameError = error.response.data.message;
           } else {
-            this.usernameError = 'Network error or server is unreachable.';
+            this.usernameError = "Network error or server is unreachable.";
           }
         });
     },
     checkPassword() {
       if (this.password.length < 6) {
-        this.passwordError = 'Password must be at least 6 characters long.';
+        this.passwordError = "Password must be at least 6 characters long.";
         this.updatePasswordValidation(false);
       } else {
-        this.passwordError = '';
+        this.passwordError = "";
         this.updatePasswordValidation(true);
       }
     },
@@ -80,19 +105,28 @@ export default {
         this.$router.push('/login');
       }
       */
-     if (this.isFormValid) {
-        axios.post('/api/register/', {
-          username: this.username,
-          password: this.password
-        }, {
-          headers: {
-              'X-CSRFToken': window.csrfToken
-          }
-        }).then(() => {
-          this.$router.push('/login');
-        }).catch(error => {
-          this.passwordError = 'Registration failed: ' + (error.response ? error.response.data.message : 'Server error');
-        });
+      if (this.isFormValid) {
+        axios
+          .post(
+            process.env.VUE_APP_BASE_URL + "register/",
+            {
+              username: this.username,
+              password: this.password,
+            },
+            {
+              headers: {
+                "X-CSRFToken": window.csrfToken,
+              },
+            }
+          )
+          .then(() => {
+            this.$router.push("/login");
+          })
+          .catch((error) => {
+            this.passwordError =
+              "Registration failed: " +
+              (error.response ? error.response.data.message : "Server error");
+          });
       }
     },
   },
