@@ -8,6 +8,7 @@ export default createStore({
       messages: dummyData.messages,
       rooms: [],
       currentRoom: null,
+      currentUser: null,
       filteredMessages: [],
       isUsernameValid: false,
       isPasswordValid: false,
@@ -18,13 +19,11 @@ export default createStore({
     setLoggedIn(state, status) {
       state.isLoggedIn = status; // ログイン状態を更新
     },
-    addMessage(state, newMessage) {
-      state.messages.push({
-        id: state.messages.length + 1,
-        user: "currentUser",
-        text: newMessage,
-        icon: "mdi-send",
-      });
+    setCurrentUser(state, user) {
+      state.currentUser = user;
+    },
+    updateMessage(state, newMessage) {
+      Vue.set(state.messages, state.messages.length, newMessage);
     },
     addRoom(state, roomName) {
       state.rooms.push({ name: roomName });
@@ -48,14 +47,43 @@ export default createStore({
           commit("setLoggedIn", false); // エラーが発生した場合、ログイン状態を false に設定
         });
     },
+    fetchCurrentUser({ commit }) {
+      axios
+        .get(process.env.VUE_APP_BASE_URL + "get_current_user/")
+        .then((response) => {
+          commit("setCurrentUser", response.data);
+          localStorage.setItem("username", response.data.username);
+        })
+        .catch((error) => {
+          console.error("Error fetching current user:", error);
+        });
+    },
+    addMessage({ commit, state }, newMessage) {
+      if (!state.currentUser) {
+        console.error("currentUser is not set");
+        return;
+      }
+      const username = state.currentUser.username;
+      axios
+        .post(process.env.VUE_APP_BASE_URL + "messages/", {
+          username: username,
+          message: newMessage,
+        })
+        .then(() => {
+          console.log("Message posted successfully");
+          commit("addMessage", newMessage);
+        })
+        .catch((error) => {
+          console.error("Failed to post message:", error);
+          console.error("Detailed error:", error.response.data);
+          alert(`Error: ${error.response.data.message}`);
+        });
+    },
     logIn({ commit }) {
       commit("setLoggedIn", true);
     },
     logOut({ commit }) {
       commit("setLoggedIn", false);
-    },
-    addMessage({ commit }, newMessage) {
-      commit("addMessage", newMessage);
     },
     addRoom({ commit }, roomName) {
       commit("addRoom", roomName);
