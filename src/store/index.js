@@ -3,7 +3,7 @@ import { createStore } from "vuex";
 import axios from "axios"; // Axios をインポート
 // import dummyData from "@/dummyData";
 
-export default createStore({
+const store = createStore({
   state() {
     return {
       messages: [],
@@ -13,7 +13,8 @@ export default createStore({
       filteredMessages: [],
       isUsernameValid: false,
       isPasswordValid: false,
-      isLoggedIn: false, // ログイン状態
+      isLoggedIn: false,
+      socket: new WebSocket(process.env.VUE_APP_WS_URL),
     };
   },
   mutations: {
@@ -24,10 +25,18 @@ export default createStore({
       state.currentUser = user;
     },
     updateMessage(state, newMessage) {
-      state.messages.push(newMessage);
+      const transformedMessage = {
+        user__username: newMessage.username,
+        text: newMessage.message,
+      };
+      state.messages = [...state.messages, transformedMessage];
+      console.log("Updated messages:", state.messages);
     },
     setMessages(state, messages) {
       state.messages = messages;
+    },
+    setSocket(state, socket) {
+      state.socket = socket;
     },
     addRoom(state, roomName) {
       state.rooms.push({ name: roomName });
@@ -73,20 +82,23 @@ export default createStore({
           console.error("Error fetching messages:", error);
         });
     },
-    addMessage({ commit }, newMessage) {
+    addMessage({ commit, state }, newText) {
       const username = localStorage.getItem("username");
       if (!username) {
         console.error("Username is not set");
         return;
       }
+      const newMessage = {
+        username: username,
+        message: newText,
+      };
+      console.log("New message:", newMessage);
+      state.socket.send(JSON.stringify(newMessage));
       axios
-        .post(process.env.VUE_APP_BASE_URL + "messages/", {
-          username: username,
-          message: newMessage,
-        })
+        .post(process.env.VUE_APP_BASE_URL + "messages/", newMessage)
         .then(() => {
           console.log("Message posted successfully");
-          commit("addMessage", newMessage);
+          commit("updateMessage", newMessage);
         })
         .catch((error) => {
           console.error("Failed to post message:", error);
@@ -114,3 +126,30 @@ export default createStore({
     },
   },
 });
+
+// WebSocketの接続が開始されたときにメッセージを取得
+store.state.socket.onopen = function () {
+  store.state.socket.send(
+    JSON.stringify({
+      type: "fetchMessages",
+    })
+  );
+};
+
+// 新しいメッセージがWebSocketを通じて受信されたときに、それをstateに追加
+store.state.socket.onmessage = function (event) {
+  console.log("WebSocket message received:", event.data);
+  let data;
+  if (event.data instanceof ArrayBuffer) {
+    const decoder = new TextDecoder("utf-8");
+    data = JSON.parse(decoder.decode(event.data));
+  } else {
+    data = JSON.parse(event.data);
+  }
+  if (data.type === "message") {
+    console.log("Received message data:", data.message);
+    store.commit("updateMessage", data.message);
+  }
+};
+
+export default store;

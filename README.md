@@ -28,39 +28,49 @@ src/
 ```
 
 # 実行
+
 yarnに切り替えたので、
+
 ```bash
 yarn build
 ```
+
 にしてください。
 ローカルでのツールを見ているときは、
+
 ```bash
 yarn serve
 ```
 
 # フロントエンド
+
 **Vue**を使用する．UIはVuestic-UIを使用．
 [こちら](https://ui.vuestic.dev/)を参照すること．
 
 ## Project setup
+
 ```bash
 npm install
 ```
 
 ### Compiles and hot-reloads for development
+
 ```bash
 npm run serve
 ```
 
 ### Compiles and minifies for production
+
 ```bash
-npm run build
+node server.js
 ```
 
 ### Lints and fixes files
+
 ```bash
 npm run lint
 ```
 
 ### Customize configuration
+
 See [Configuration Reference](https://cli.vuejs.org/config/).
