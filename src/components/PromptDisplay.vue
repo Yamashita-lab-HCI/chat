@@ -1,14 +1,13 @@
 <template>
   <div class="prompt-display">
-    <h2>🧑 ChatGPTに質問してみよう</h2>
+    <h2>🧑 Ask ChatGPT!</h2>
     <div class="input-group">
       <input
         class="input"
-        placeholder="ここに質問を入力してください。"
+        placeholder="Please type in your questions."
         v-model="state.prompt"
-        @keyup.enter="askChatGPT"
       />
-      <button @click="askChatGPT" class="btn">送信</button>
+      <button @click="askChatGPT" class="btn">Send</button>
     </div>
     <div class="response">
       <pre>{{ state.response }}</pre>
@@ -22,7 +21,8 @@ import axios from "axios";
 
 const state = reactive({
   prompt: "",
-  response: "✅ ChatGPTの回答がここに表示されます。",
+  response:
+    "✅ Answer from ChatGPT will appear here. You can type in any languages!",
   isCollapsed: false,
 });
 

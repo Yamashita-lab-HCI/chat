@@ -11,7 +11,8 @@
         <span class="message-user">{{ msg.user__username }}</span>
       </VaCardTitle>
       <VaCardContent>
-        {{ msg.text }}
+        <div v-html="formatMessage(msg.text)"></div>
+        <VaButton @click="quoteMessage(msg.text)">Quote</VaButton>
       </VaCardContent>
     </VaCard>
   </div>
@@ -20,6 +21,7 @@
 <script>
 // import { mapState } from 'vuex';
 import { MdIcon } from "mdi-vue";
+import { marked } from "marked";
 
 export default {
   name: "MessageList",
@@ -36,6 +38,37 @@ export default {
       }
       const iconName = "mdi-" + username.toLowerCase();
       return iconName;
+    },
+    quoteMessage(messageText) {
+      this.$emit("quote", messageText);
+    },
+    formatMessage(msg) {
+      const renderer = new marked.Renderer();
+
+      renderer.blockquote = function (quote) {
+        return `<blockquote class="va-blockquote">${quote}</blockquote>`;
+      };
+
+      renderer.strong = function (text) {
+        return `<span class="va-text-bold mr-2">${text}</span>`;
+      };
+
+      renderer.em = function (text) {
+        return `<span class="va-text-highlighted">${text}</span>`;
+      };
+
+      renderer.list = function (body, ordered) {
+        const type = ordered ? "ol" : "ul";
+        return `<${type} class="va-${ordered ? "ordered" : "unordered"}">${body}</${type}>`;
+      };
+
+      renderer.listitem = function (text) {
+        return `<li>${text}</li>\n`;
+      };
+
+      marked.setOptions({ renderer });
+
+      return marked(String(msg));
     },
   },
 };

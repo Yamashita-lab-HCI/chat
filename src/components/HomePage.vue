@@ -6,8 +6,8 @@
     <div class="chat-container">
       <!-- チャットメッセージのリストとメッセージ入力フィールドを包含するコンテナ -->
       <div class="chat-section">
-        <message-list :messages="messages"></message-list>
-        <message-input @send="addMessage"></message-input>
+        <message-list :messages="messages" @quote="quoteMessage"></message-list>
+        <message-input :value="inputMessage" @send="addMessage"></message-input>
       </div>
       <!-- プロンプト表示部分 -->
       <prompt-display></prompt-display>
@@ -29,6 +29,11 @@ export default {
     MessageInput,
     PromptDisplay,
   },
+  data() {
+    return {
+      inputMessage: "",
+    };
+  },
   mounted() {
     this.$store.dispatch("fetchMessages");
     this.$store.dispatch("fetchCurrentUser");
@@ -39,8 +44,12 @@ export default {
     },
   },
   methods: {
-    addMessage(newMessage) {
-      this.$store.dispatch("addMessage", newMessage);
+    addMessage() {
+      this.$store.dispatch("addMessage", this.inputMessage);
+      this.inputMessage = "";
+    },
+    quoteMessage(message) {
+      this.inputMessage = `> ${message}\n`;
     },
   },
 };
@@ -60,6 +69,7 @@ export default {
 }
 
 .chat-section {
+  max-height: 500px;
   flex: 1; /* チャットセクションを適切に伸縮させる */
 }
 </style>
