@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build && node add-csrf-token.js",
+    "build": "vue-cli-service build && node add-csrf-token.js && node server.js",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -22,7 +22,8 @@
     "vue-router": "^4.3.2",
     "vuestic-admin": "^0.0.1-security",
     "vuestic-ui": "^1.9.9",
-    "vuex": "^4.1.0"
+    "vuex": "^4.1.0",
+    "ws": "^8.17.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",

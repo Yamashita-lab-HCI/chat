@@ -3,8 +3,12 @@
     <VaCard v-for="msg in messages" :key="msg.id" class="mb-2 message-card">
       <VaCardTitle>
         <!-- Use mdicon component from mdi-vue -->
-        <MdIcon :name="getIconName(msg.icon)" class="message-icon" size="24" />
-        <span class="message-user">{{ msg.user }}</span>
+        <MdIcon
+          :name="getIconName(msg.user__username)"
+          class="message-icon"
+          size="24"
+        />
+        <span class="message-user">{{ msg.user__username }}</span>
       </VaCardTitle>
       <VaCardContent>
         {{ msg.text }}
@@ -26,8 +30,12 @@ export default {
     messages: Array,
   },
   methods: {
-    getIconName(iconName) {
-      return iconName.replace(/mdi-/, "");
+    getIconName(username) {
+      if (!username) {
+        return "mdi-home";
+      }
+      const iconName = "mdi-" + username.toLowerCase();
+      return iconName;
     },
   },
 };
