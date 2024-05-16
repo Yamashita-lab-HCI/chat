@@ -18,7 +18,7 @@
 <script>
 // import dummyData from '@/dummyData';
 import MessageList from "@/components/MessageList.vue";
-import MessageInput from "@/components/MessageInput.vue";
+// import MessageInput from "@/components/MessageInput.vue";
 import PromptDisplay from "@/components/PromptDisplay.vue";
 // import axios from "axios";
 
@@ -26,7 +26,7 @@ export default {
   name: "HomePage",
   components: {
     MessageList,
-    MessageInput,
+    // MessageInput,
     PromptDisplay,
   },
   data() {

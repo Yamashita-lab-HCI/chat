@@ -26,20 +26,28 @@
         </VaButton>
       </VaCardContent>
     </VaCard>
+    <CommandPalette
+      v-if="isAuthenticated"
+      :quotedMessage="quotedMessage"
+      @send="handleSend"
+      @clear-quote="clearQuotedMessage"
+    />
   </div>
 </template>
 
 <script>
-// import { mapState } from 'vuex';
 import { MdIcon } from "mdi-vue";
 import { Return32 } from "@carbon/icons-vue";
 import { marked } from "marked";
+import CommandPalette from "./CommandPalette.vue"; // CommandPaletteをインポート
+import { mapState, mapActions } from "vuex";
 
 export default {
   name: "MessageList",
   components: {
     MdIcon,
     Return32,
+    CommandPalette,
   },
   props: {
     messages: Array,
@@ -47,7 +55,13 @@ export default {
   data() {
     return {
       showQuoteButton: {},
+      quotedMessage: "",
     };
+  },
+  computed: {
+    ...mapState({
+      isAuthenticated: (state) => state.isLoggedIn,
+    }),
   },
   created() {
     this.messages.forEach((msg) => {
@@ -55,6 +69,7 @@ export default {
     });
   },
   methods: {
+    ...mapActions(["addMessage"]),
     getIconName(username) {
       if (!username) {
         return "mdi-home";
@@ -63,7 +78,10 @@ export default {
       return iconName;
     },
     quoteMessage(messageText) {
-      this.$emit("quote", messageText);
+      this.quotedMessage = messageText;
+    },
+    clearQuotedMessage() {
+      this.quotedMessage = "";
     },
     formatMessage(msg) {
       const renderer = new marked.Renderer();
@@ -92,6 +110,9 @@ export default {
       marked.setOptions({ renderer });
 
       return marked(String(msg));
+    },
+    handleSend(content) {
+      this.addMessage(content);
     },
   },
 };
