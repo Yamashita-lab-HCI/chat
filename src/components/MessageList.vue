@@ -1,6 +1,12 @@
 <template>
   <div class="message-list">
-    <VaCard v-for="msg in messages" :key="msg.id" class="mb-2 message-card">
+    <VaCard
+      v-for="msg in messages"
+      :key="msg.id"
+      class="mb-2 message-card"
+      @mouseover="showQuoteButton[msg.id] = true"
+      @mouseleave="showQuoteButton[msg.id] = false"
+    >
       <VaCardTitle>
         <!-- Use mdicon component from mdi-vue -->
         <MdIcon
@@ -12,7 +18,12 @@
       </VaCardTitle>
       <VaCardContent>
         <div v-html="formatMessage(msg.text)"></div>
-        <VaButton @click="quoteMessage(msg.text)">Quote</VaButton>
+        <VaButton
+          v-show="showQuoteButton[msg.id]"
+          @click="quoteMessage(msg.text)"
+        >
+          <Return32 />
+        </VaButton>
       </VaCardContent>
     </VaCard>
   </div>
@@ -21,15 +32,27 @@
 <script>
 // import { mapState } from 'vuex';
 import { MdIcon } from "mdi-vue";
+import { Return32 } from "@carbon/icons-vue";
 import { marked } from "marked";
 
 export default {
   name: "MessageList",
   components: {
     MdIcon,
+    Return32,
   },
   props: {
     messages: Array,
+  },
+  data() {
+    return {
+      showQuoteButton: {},
+    };
+  },
+  created() {
+    this.messages.forEach((msg) => {
+      this.$set(msg, "showQuoteButton", false);
+    });
   },
   methods: {
     getIconName(username) {
@@ -79,6 +102,10 @@ export default {
   display: flex;
   align-items: center;
   padding: 16px;
+}
+
+.message-card:hover .va-button {
+  display: block;
 }
 
 .message-icon {

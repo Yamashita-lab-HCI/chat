@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@achrinza/node-ipc": "^10.1.10",
+    "@carbon/icons-vue": "^10.83.1",
     "@gtm-support/vue-gtm": "^2.2.0",
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
