@@ -8,7 +8,6 @@
       @mouseleave="showQuoteButton[msg.id] = false"
     >
       <VaCardTitle>
-        <!-- Use mdicon component from mdi-vue -->
         <MdIcon
           :name="getIconName(msg.user__username)"
           class="message-icon"
@@ -17,9 +16,9 @@
         <span class="message-user">{{ msg.user__username }}</span>
       </VaCardTitle>
       <VaCardContent>
-        <div v-html="formatMessage(msg.text)"></div>
+        <div v-if="msg.text" v-html="parseOrderedList(msg.text)"></div>
         <VaButton
-          v-show="showQuoteButton[msg.id]"
+          v-if="showQuoteButton[msg.id]"
           @click="quoteMessage(msg.text)"
         >
           <Return32 />
@@ -38,7 +37,6 @@
 <script>
 import { MdIcon } from "mdi-vue";
 import { Return32 } from "@carbon/icons-vue";
-import { marked } from "marked";
 import CommandPalette from "./CommandPalette.vue"; // CommandPaletteをインポート
 import { mapState, mapActions } from "vuex";
 
@@ -65,8 +63,20 @@ export default {
   },
   created() {
     this.messages.forEach((msg) => {
-      this.$set(msg, "showQuoteButton", false);
+      this.$set(this.showQuoteButton, msg.id, false);
     });
+  },
+  watch: {
+    messages: {
+      immediate: true,
+      handler(newMessages) {
+        newMessages.forEach((msg) => {
+          if (!(msg.id in this.showQuoteButton)) {
+            this.showQuoteButton[msg.id] = false;
+          }
+        });
+      },
+    },
   },
   methods: {
     ...mapActions(["addMessage"]),
@@ -83,36 +93,17 @@ export default {
     clearQuotedMessage() {
       this.quotedMessage = "";
     },
-    formatMessage(msg) {
-      const renderer = new marked.Renderer();
-
-      renderer.blockquote = function (quote) {
-        return `<blockquote class="va-blockquote">${quote}</blockquote>`;
-      };
-
-      renderer.strong = function (text) {
-        return `<span class="va-text-bold mr-2">${text}</span>`;
-      };
-
-      renderer.em = function (text) {
-        return `<span class="va-text-highlighted">${text}</span>`;
-      };
-
-      renderer.list = function (body, ordered) {
-        const type = ordered ? "ol" : "ul";
-        return `<${type} class="va-${ordered ? "ordered" : "unordered"}">${body}</${type}>`;
-      };
-
-      renderer.listitem = function (text) {
-        return `<li>${text}</li>\n`;
-      };
-
-      marked.setOptions({ renderer });
-
-      return marked(String(msg));
-    },
     handleSend(content) {
-      this.addMessage(content);
+      this.addMessage(content).then(() => {
+        this.$emit("update-messages", [...this.messages, content].reverse());
+      });
+    },
+    parseOrderedList(text) {
+      const lines = text.split("\n");
+      const listItems = lines
+        .map((line, index) => `<li>${index + 1}. ${line}</li>`)
+        .join("");
+      return `<ol>${listItems}</ol>`;
     },
   },
 };
@@ -127,6 +118,22 @@ export default {
 
 .message-card:hover .va-button {
   display: block;
+}
+
+.message-card ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.message-card li {
+  margin-bottom: 10px;
+}
+
+/* 引用のスタイル */
+.message-card blockquote {
+  border-left: 4px solid #ddd;
+  padding-left: 15px;
+  color: #666;
 }
 
 .message-icon {

@@ -9,13 +9,6 @@
       v-model="content"
       :config="editorConfig"
     ></ckeditor>
-    <!---
-    <div class="toolbar">
-      <button @click="formatText('bold')"><b>B</b></button>
-      <button @click="formatText('italic')"><i>I</i></button>
-      <button @click="formatText('bulletedList')">• List</button>
-    </div>
-    -->
     <div class="va-title">Type your Message:</div>
     <VaButton @click="sendMessage">Send</VaButton>
   </div>
@@ -49,14 +42,11 @@ export default {
     };
   },
   methods: {
-    formatText(command) {
-      this.editor.execute(command);
-    },
     sendMessage() {
       if (this.content.trim() !== "") {
         let messageContent = this.content;
         if (this.quotedMessage) {
-          messageContent = `> ${this.quotedMessage}\n\n${this.content}`;
+          messageContent = `<blockquote>${this.quotedMessage}</blockquote>${this.content}`;
         }
         this.$emit("send", messageContent);
         this.content = ""; // 送信後にエディタをクリア
@@ -75,9 +65,8 @@ export default {
   border: 1px solid #ccc;
   padding: 10px;
 }
-.toolbar {
-  display: flex;
-  gap: 10px;
+.ck-content {
+  padding: 20px;
 }
 .va-title {
   margin-top: 10px;

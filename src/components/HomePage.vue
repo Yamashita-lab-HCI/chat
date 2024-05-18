@@ -6,7 +6,11 @@
     <div class="chat-container">
       <!-- チャットメッセージのリストとメッセージ入力フィールドを包含するコンテナ -->
       <div class="chat-section">
-        <message-list :messages="messages" @quote="quoteMessage"></message-list>
+        <message-list
+          :messages="messages"
+          @quote="quoteMessage"
+          @update-messages="updateMessages"
+        ></message-list>
         <message-input :value="inputMessage" @send="addMessage"></message-input>
       </div>
       <!-- プロンプト表示部分 -->
@@ -50,6 +54,9 @@ export default {
     },
     quoteMessage(message) {
       this.inputMessage = `> ${message}\n`;
+    },
+    updateMessages(newMessages) {
+      this.$store.commit("SET_MESSAGES", newMessages);
     },
   },
 };
