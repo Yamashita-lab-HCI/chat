@@ -83,28 +83,41 @@ const store = createStore({
         });
     },
     addMessage({ commit, state }, newText) {
-      const username = localStorage.getItem("username");
-      if (!username) {
-        console.error("Username is not set");
-        return;
-      }
-      const newMessage = {
-        username: username,
-        message: newText,
-      };
-      console.log("New message:", newMessage);
-      state.socket.send(JSON.stringify(newMessage));
-      axios
-        .post(process.env.VUE_APP_BASE_URL + "messages/", newMessage)
-        .then(() => {
-          console.log("Message posted successfully");
-          commit("updateMessage", newMessage);
-        })
-        .catch((error) => {
-          console.error("Failed to post message:", error);
-          console.error("Detailed error:", error.response.data);
-          alert(`Error: ${error.response.data.message}`);
-        });
+      return new Promise((resolve, reject) => {
+        const username = localStorage.getItem("username");
+        if (!username) {
+          console.error("Username is not set");
+          reject("Username is not set");
+          return;
+        }
+        // newTextが空白の場合は送信をスキップ
+        if (!newText || newText.trim() === "") {
+          console.error("Message is empty");
+          reject("Message is empty");
+          return;
+        }
+        const newMessage = {
+          username: username,
+          message: newText,
+        };
+        console.log("New message:", newMessage);
+        state.socket.send(JSON.stringify(newMessage));
+        axios
+          .post(process.env.VUE_APP_BASE_URL + "messages/", newMessage)
+          .then((response) => {
+            console.log("Message posted successfully");
+            const returnedMessage = response.data.new_message;
+            commit("updateMessage", returnedMessage);
+            state.showQuoteButton[returnedMessage.id] = false;
+            resolve(returnedMessage);
+          })
+          .catch((error) => {
+            console.error("Failed to post message:", error);
+            console.error("Detailed error:", error.response.data);
+            alert(`Error: ${error.response.data.message}`);
+            reject(error);
+          });
+      });
     },
     logIn({ commit }) {
       commit("setLoggedIn", true);
@@ -146,7 +159,7 @@ store.state.socket.onmessage = function (event) {
   } else {
     data = JSON.parse(event.data);
   }
-  if (data.type === "message") {
+  if (data.type === "message" && data.message.text.trim() !== "") {
     console.log("Received message data:", data.message);
     store.commit("updateMessage", data.message);
   }

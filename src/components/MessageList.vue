@@ -4,12 +4,13 @@
       v-for="msg in messages"
       :key="msg.id"
       class="mb-2 message-card"
-      @mouseover="showQuoteButton[msg.id] = true"
-      @mouseleave="showQuoteButton[msg.id] = false"
+      @mouseover="handleMouseOver(msg.id)"
+      @mouseleave="handleMouseLeave(msg.id)"
     >
       <VaCardTitle>
         <MdIcon
-          :name="getIconName(msg.user__username)"
+          :name="getIconName()"
+          color="red"
           class="message-icon"
           size="24"
         />
@@ -18,8 +19,8 @@
       <VaCardContent>
         <div v-if="msg.text" v-html="msg.text"></div>
         <VaButton
-          v-if="showQuoteButton[msg.id]"
-          @click="quoteMessage(msg.text)"
+          v-show="showQuoteButton[msg.id]"
+          @click="quoteMessage(msg.text, msg.id)"
         >
           <Return32 />
         </VaButton>
@@ -38,7 +39,8 @@
 import { MdIcon } from "mdi-vue";
 import { Return32 } from "@carbon/icons-vue";
 import CommandPalette from "./CommandPalette.vue"; // CommandPaletteをインポート
-import { mapState, mapActions } from "vuex";
+import { useStore, mapState } from "vuex";
+import { reactive, toRefs, watch, onMounted, ref } from "vue";
 
 export default {
   name: "MessageList",
@@ -50,53 +52,96 @@ export default {
   props: {
     messages: Array,
   },
-  data() {
-    return {
-      showQuoteButton: {},
+  setup(props, context) {
+    const store = useStore();
+    const state = reactive({
+      showQuoteButton: ref({}),
       quotedMessage: "",
-    };
-  },
-  computed: {
-    ...mapState({
+      isAuthenticated: false,
+    });
+
+    const { isAuthenticated } = mapState({
       isAuthenticated: (state) => state.isLoggedIn,
-    }),
-  },
-  created() {
-    this.initializeShowQuoteButton();
-  },
-  watch: {
-    messages: {
-      immediate: true,
-      handler() {
-        this.initializeShowQuoteButton();
+    });
+
+    onMounted(() => {
+      props.messages.forEach((msg) => {
+        state.showQuoteButton[msg.id] = false;
+      });
+    });
+
+    watch(
+      () => props.messages,
+      (newMessages) => {
+        newMessages.forEach((message) => {
+          if (
+            !Object.prototype.hasOwnProperty.call(
+              state.showQuoteButton,
+              message.id
+            )
+          ) {
+            state.showQuoteButton = {
+              ...state.showQuoteButton,
+              [message.id]: false,
+            };
+          }
+        });
       },
-    },
-  },
-  methods: {
-    ...mapActions(["addMessage"]),
-    initializeShowQuoteButton() {
-      this.messages.forEach((msg) => {
-        this.showQuoteButton[msg.id] = false;
-      });
-    },
-    getIconName(username) {
-      if (!username) {
-        return "mdi-home";
+      { immediate: true }
+    );
+
+    function getIconName() {
+      return "mdi-home";
+    }
+
+    function handleMouseOver(id) {
+      state.showQuoteButton[id] = true;
+    }
+
+    function handleMouseLeave(id) {
+      state.showQuoteButton[id] = false;
+    }
+
+    function quoteMessage(messageText, id) {
+      state.quotedMessage = messageText;
+      context.emit("quote", messageText);
+      state.showQuoteButton[id] = false;
+    }
+
+    function clearQuotedMessage() {
+      state.quotedMessage = "";
+    }
+
+    function handleSend(content) {
+      if (!content || content.trim() === "") {
+        return;
       }
-      const iconName = "mdi-" + username.toLowerCase();
-      return iconName;
-    },
-    quoteMessage(messageText) {
-      this.quotedMessage = messageText;
-    },
-    clearQuotedMessage() {
-      this.quotedMessage = "";
-    },
-    handleSend(content) {
-      this.addMessage(content).then(() => {
-        this.$emit("update-messages", [...this.messages, content].reverse());
+      store.dispatch("addMessage", content).then((newMessage) => {
+        console.log("newMessage:", newMessage); // デバッグログを追加
+        if (newMessage && newMessage.id) {
+          context.emit("update-messages", [newMessage, ...props.messages]);
+          state.showQuoteButton[newMessage.id] = false;
+          Object.keys(state.showQuoteButton).forEach((key) => {
+            if (key !== newMessage.id) {
+              state.showQuoteButton[key] = false;
+            }
+          });
+        } else {
+          console.error("newMessage does not have an id:", newMessage);
+        }
       });
-    },
+    }
+
+    return {
+      ...toRefs(state),
+      quoteMessage,
+      clearQuotedMessage,
+      handleSend,
+      isAuthenticated,
+      getIconName,
+      handleMouseOver,
+      handleMouseLeave,
+    };
   },
 };
 </script>
@@ -106,6 +151,8 @@ export default {
   display: flex;
   align-items: center;
   padding: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .message-card:hover .va-button {
