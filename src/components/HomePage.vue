@@ -6,8 +6,12 @@
     <div class="chat-container">
       <!-- チャットメッセージのリストとメッセージ入力フィールドを包含するコンテナ -->
       <div class="chat-section">
-        <message-list :messages="messages"></message-list>
-        <message-input @send="addMessage"></message-input>
+        <message-list
+          :messages="messages"
+          @quote="quoteMessage"
+          @update-messages="updateMessages"
+        ></message-list>
+        <message-input :value="inputMessage" @send="addMessage"></message-input>
       </div>
       <!-- プロンプト表示部分 -->
       <prompt-display></prompt-display>
@@ -18,7 +22,7 @@
 <script>
 // import dummyData from '@/dummyData';
 import MessageList from "@/components/MessageList.vue";
-import MessageInput from "@/components/MessageInput.vue";
+// import MessageInput from "@/components/MessageInput.vue";
 import PromptDisplay from "@/components/PromptDisplay.vue";
 // import axios from "axios";
 
@@ -26,8 +30,12 @@ export default {
   name: "HomePage",
   components: {
     MessageList,
-    MessageInput,
     PromptDisplay,
+  },
+  data() {
+    return {
+      inputMessage: "",
+    };
   },
   mounted() {
     this.$store.dispatch("fetchMessages");
@@ -39,8 +47,15 @@ export default {
     },
   },
   methods: {
-    addMessage(newMessage) {
-      this.$store.dispatch("addMessage", newMessage);
+    addMessage() {
+      this.$store.dispatch("addMessage", this.inputMessage);
+      this.inputMessage = "";
+    },
+    quoteMessage(message) {
+      this.inputMessage = `> ${message}\n`;
+    },
+    updateMessages(newMessages) {
+      this.$store.commit("SET_MESSAGES", newMessages);
     },
   },
 };
@@ -60,6 +75,7 @@ export default {
 }
 
 .chat-section {
+  max-height: 500px;
   flex: 1; /* チャットセクションを適切に伸縮させる */
 }
 </style>
