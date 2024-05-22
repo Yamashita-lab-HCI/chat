@@ -16,7 +16,7 @@
         <span class="message-user">{{ msg.user__username }}</span>
       </VaCardTitle>
       <VaCardContent>
-        <div v-if="msg.text" v-html="parseOrderedList(msg.text)"></div>
+        <div v-if="msg.text" v-html="msg.text"></div>
         <VaButton
           v-if="showQuoteButton[msg.id]"
           @click="quoteMessage(msg.text)"
@@ -62,24 +62,23 @@ export default {
     }),
   },
   created() {
-    this.messages.forEach((msg) => {
-      this.$set(this.showQuoteButton, msg.id, false);
-    });
+    this.initializeShowQuoteButton();
   },
   watch: {
     messages: {
       immediate: true,
-      handler(newMessages) {
-        newMessages.forEach((msg) => {
-          if (!(msg.id in this.showQuoteButton)) {
-            this.showQuoteButton[msg.id] = false;
-          }
-        });
+      handler() {
+        this.initializeShowQuoteButton();
       },
     },
   },
   methods: {
     ...mapActions(["addMessage"]),
+    initializeShowQuoteButton() {
+      this.messages.forEach((msg) => {
+        this.showQuoteButton[msg.id] = false;
+      });
+    },
     getIconName(username) {
       if (!username) {
         return "mdi-home";
@@ -97,13 +96,6 @@ export default {
       this.addMessage(content).then(() => {
         this.$emit("update-messages", [...this.messages, content].reverse());
       });
-    },
-    parseOrderedList(text) {
-      const lines = text.split("\n");
-      const listItems = lines
-        .map((line, index) => `<li>${index + 1}. ${line}</li>`)
-        .join("");
-      return `<ol>${listItems}</ol>`;
     },
   },
 };
@@ -127,6 +119,11 @@ export default {
 
 .message-card li {
   margin-bottom: 10px;
+}
+
+.message-card ol {
+  list-style-type: decimal;
+  padding-left: 20px;
 }
 
 /* 引用のスタイル */

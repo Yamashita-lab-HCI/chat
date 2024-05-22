@@ -30,7 +30,6 @@ export default {
   name: "HomePage",
   components: {
     MessageList,
-    // MessageInput,
     PromptDisplay,
   },
   data() {

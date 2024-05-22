@@ -31,13 +31,23 @@ export default {
       editor: ClassicEditor,
       content: "",
       editorConfig: {
-        toolbar: [
-          "bold",
-          "italic",
-          "bulletedList",
-          "numberedList",
-          "blockQuote",
-        ],
+        toolbar: {
+          items: [
+            "undo",
+            "redo",
+            "|",
+            "bold",
+            "italic",
+            "|",
+            "link",
+            "uploadImage",
+            "blockQuote",
+            "|",
+            "bulletedList",
+            "numberedList",
+          ],
+          shouldNotGroupWhenFull: false,
+        },
       },
     };
   },
@@ -46,7 +56,7 @@ export default {
       if (this.content.trim() !== "") {
         let messageContent = this.content;
         if (this.quotedMessage) {
-          messageContent = `<blockquote>${this.quotedMessage}</blockquote>${this.content}`;
+          messageContent = `<blockquote>${this.quotedMessage}</blockquote>${messageContent}`;
         }
         this.$emit("send", messageContent);
         this.content = ""; // 送信後にエディタをクリア
