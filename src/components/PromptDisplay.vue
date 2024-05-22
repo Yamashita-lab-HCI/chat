@@ -86,6 +86,7 @@ async function makeRequestWithRetry(url, data, retries, delay) {
 .prompt-display {
   display: flex;
   flex-direction: column;
+  width: 50%;
   gap: 20px;
 }
 .input-group {

@@ -21,11 +21,14 @@
         <VaButton
           v-show="showQuoteButton[msg.id]"
           @click="quoteMessage(msg.text, msg.id)"
+          class="quote-button"
         >
           <Return32 />
         </VaButton>
       </VaCardContent>
     </VaCard>
+  </div>
+  <div class="command-palette-wrapper">
     <CommandPalette
       v-if="isAuthenticated"
       :quotedMessage="quotedMessage"
@@ -155,7 +158,15 @@ export default {
   z-index: 1;
 }
 
-.message-card:hover .va-button {
+.quote-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: none;
+  padding: 5px;
+}
+
+.message-card:hover .quote-button {
   display: block;
 }
 
@@ -187,5 +198,21 @@ export default {
 .message-user {
   font-weight: bold;
   margin-right: 10px;
+}
+
+.message-list {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  position: relative;
+}
+.command-palette-wrapper {
+  position: sticky;
+  bottom: 0;
+}
+
+.command-palette {
+  width: 100%;
+  height: 100px;
+  z-index: 2;
 }
 </style>
