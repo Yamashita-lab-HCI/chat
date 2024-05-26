@@ -159,7 +159,12 @@ store.state.socket.onmessage = function (event) {
   } else {
     data = JSON.parse(event.data);
   }
-  if (data.type === "message" && data.message.text.trim() !== "") {
+  if (
+    data.type === "message" &&
+    data.message &&
+    data.message.text &&
+    data.message.text.trim() !== ""
+  ) {
     console.log("Received message data:", data.message);
     store.commit("updateMessage", data.message);
   }

@@ -116,7 +116,27 @@ export default {
     createNewRoom() {
       const roomName = prompt("Enter a name for the new chat room:");
       if (roomName) {
-        this.addRoom({ name: roomName });
+        axios
+          .post(
+            process.env.VUE_APP_BASE_URL + "create-room/",
+            { roomName: roomName },
+            {
+              headers: {
+                "X-CSRFToken": window.csrfToken,
+              },
+            }
+          )
+          .then((response) => {
+            this.addRoom({ name: roomName });
+            this.$router.push(`/room/${response.data.roomId}`);
+          })
+          .catch((error) => {
+            console.error("Failed to create room:", error);
+            console.error("Server response:", error.response.data);
+            alert(
+              `Room creation failed: ${error.response.data.detail || "Please try again."}`
+            );
+          });
       }
     },
   },
