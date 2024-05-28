@@ -15,6 +15,7 @@ const store = createStore({
       isPasswordValid: false,
       isLoggedIn: false,
       socket: new WebSocket(process.env.VUE_APP_WS_URL),
+      showQuoteButton: {},
     };
   },
   mutations: {
@@ -23,6 +24,9 @@ const store = createStore({
     },
     setCurrentUser(state, user) {
       state.currentUser = user;
+    },
+    setCurrentRoom(state, room) {
+      state.currentRoom = room;
     },
     updateMessage(state, newMessage) {
       const transformedMessage = {
@@ -46,6 +50,9 @@ const store = createStore({
     },
     updatePasswordValidation(state, isValid) {
       state.isPasswordValid = isValid;
+    },
+    SET_ROOM_ID(state, roomId) {
+      state.roomId = roomId;
     },
   },
   actions: {
@@ -72,9 +79,17 @@ const store = createStore({
           console.error("Error fetching current user:", error);
         });
     },
-    fetchMessages({ commit }) {
+    fetchMessages({ state, commit }) {
+      if (state.currentRoom === null) {
+        console.error("currentRoom is not set");
+        return;
+      }
       axios
-        .get(process.env.VUE_APP_BASE_URL + "messages/")
+        .get(process.env.VUE_APP_BASE_URL + "messages/", {
+          params: {
+            room_id: state.currentRoom,
+          },
+        })
         .then((response) => {
           commit("setMessages", response.data);
         })
@@ -82,23 +97,24 @@ const store = createStore({
           console.error("Error fetching messages:", error);
         });
     },
-    addMessage({ commit, state }, newText) {
+    addMessage({ commit, state }, messageData) {
       return new Promise((resolve, reject) => {
+        console.log("messageData:", messageData);
         const username = localStorage.getItem("username");
         if (!username) {
           console.error("Username is not set");
           reject("Username is not set");
           return;
         }
-        // newTextが空白の場合は送信をスキップ
-        if (!newText || newText.trim() === "") {
+        if (!messageData) {
           console.error("Message is empty");
           reject("Message is empty");
           return;
         }
         const newMessage = {
           username: username,
-          message: newText,
+          message: messageData,
+          room_id: state.currentRoom,
         };
         console.log("New message:", newMessage);
         state.socket.send(JSON.stringify(newMessage));
@@ -108,7 +124,9 @@ const store = createStore({
             console.log("Message posted successfully");
             const returnedMessage = response.data.new_message;
             commit("updateMessage", returnedMessage);
-            state.showQuoteButton[returnedMessage.id] = false;
+            if (!(returnedMessage.id in state.showQuoteButton)) {
+              state.showQuoteButton[returnedMessage.id] = false;
+            }
             resolve(returnedMessage);
           })
           .catch((error) => {
@@ -129,13 +147,16 @@ const store = createStore({
       commit("addRoom", roomName);
     },
     selectRoom({ commit }, room) {
-      commit("selectRoom", room);
+      commit("setCurrentRoom", room);
     },
     updateUsernameValidation({ commit }, isValid) {
       commit("updateUsernameValidation", isValid);
     },
     updatePasswordValidation({ commit }, isValid) {
       commit("updatePasswordValidation", isValid);
+    },
+    setRoomId({ commit }, roomId) {
+      commit("SET_ROOM_ID", roomId);
     },
   },
 });

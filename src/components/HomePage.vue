@@ -24,10 +24,11 @@
 import MessageList from "@/components/MessageList.vue";
 // import MessageInput from "@/components/MessageInput.vue";
 import PromptDisplay from "@/components/PromptDisplay.vue";
-// import axios from "axios";
+import axios from "axios";
 
 export default {
   name: "HomePage",
+  // props: ["id"],
   components: {
     MessageList,
     PromptDisplay,
@@ -38,17 +39,61 @@ export default {
     };
   },
   mounted() {
-    this.$store.dispatch("fetchMessages");
-    this.$store.dispatch("fetchCurrentUser");
+    const csrfToken = this.getCookie("csrftoken");
+    axios
+      .post(
+        process.env.VUE_APP_BASE_URL + "create_default_room/",
+        {
+          room_name: "HomePage",
+          room_id: 0,
+        },
+        {
+          headers: {
+            "X-CSRFToken": csrfToken.value,
+          },
+        }
+      )
+      .then((response) => {
+        console.log(response.data);
+        this.$store.commit("setCurrentRoom", 0);
+        this.$store.dispatch("fetchMessages");
+        this.$store.dispatch("fetchCurrentUser");
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   },
   computed: {
     messages() {
       return this.$store.state.messages;
     },
+    currentRoom() {
+      return this.$store.state.currentRoom;
+    },
   },
   methods: {
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
     addMessage() {
-      this.$store.dispatch("addMessage", this.inputMessage);
+      if (!this.currentRoom) {
+        console.error("currentRoom is not set");
+        return;
+      }
+      console.log(this.inputMessage);
+      const messageData = this.inputMessage;
+      this.$store.dispatch("addMessage", messageData);
       this.inputMessage = "";
     },
     quoteMessage(message) {

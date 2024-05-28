@@ -3,17 +3,19 @@ import HomePage from "@/components/HomePage.vue";
 import LoginPage from "@/components/LoginPage.vue";
 import RegisterPage from "@/components/RegisterPage.vue";
 import UserProfile from "@/components/UserProfile.vue";
+import RoomPage from "@/components/RoomPage.vue";
 
 const routes = [
-  { path: "/", component: LoginPage }, // ルートパスをLoginPageに変更
-  { path: "/home", component: HomePage }, // HomePageへの新しいパスを追加
+  { path: "/", component: LoginPage },
+  { path: "/home", component: HomePage },
+  { path: "/room/:id", component: RoomPage, props: true },
   { path: "/login", component: LoginPage },
   { path: "/register", component: RegisterPage },
   { path: "/user-profile", component: UserProfile },
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.STARIC_URL),
+  history: createWebHistory(process.env.STATIC_URL),
   routes,
 });
 
