@@ -23,7 +23,6 @@ import PromptDisplay from "@/components/PromptDisplay.vue";
 
 export default {
   name: "RoomPage",
-  props: ["id"], // ルームIDをpropsとして追加
   components: {
     MessageList,
     PromptDisplay,
@@ -33,14 +32,22 @@ export default {
       inputMessage: "",
     };
   },
-  mounted() {
-    // ルームIDを使用してメッセージとユーザー情報を取得
-    this.$store.dispatch("fetchMessages", this.id);
-    this.$store.dispatch("fetchCurrentUser", this.id);
+  watch: {
+    "$route.params.id": {
+      immediate: true,
+      async handler(newId) {
+        await this.$store.commit("setCurrentRoom", newId);
+        this.$store.dispatch("fetchMessages", newId);
+        this.$store.dispatch("fetchCurrentUser", newId);
+      },
+    },
   },
   computed: {
     messages() {
       return this.$store.state.messages;
+    },
+    currentRoom() {
+      return this.$store.state.currentRoom;
     },
   },
   methods: {

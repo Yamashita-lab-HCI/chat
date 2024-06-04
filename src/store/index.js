@@ -16,9 +16,13 @@ const store = createStore({
       isLoggedIn: false,
       socket: new WebSocket(process.env.VUE_APP_WS_URL),
       showQuoteButton: {},
+      roomId: null,
     };
   },
   mutations: {
+    setRooms(state, rooms) {
+      state.rooms = rooms;
+    },
     setLoggedIn(state, status) {
       state.isLoggedIn = status; // ログイン状態を更新
     },
@@ -43,7 +47,7 @@ const store = createStore({
       state.socket = socket;
     },
     addRoom(state, roomName) {
-      state.rooms.push({ name: roomName });
+      state.rooms = [...state.rooms, { name: roomName }];
     },
     updateUsernameValidation(state, isValid) {
       state.isUsernameValid = isValid;
@@ -56,6 +60,21 @@ const store = createStore({
     },
   },
   actions: {
+    fetchRooms({ commit }) {
+      axios
+        .get(process.env.VUE_APP_BASE_URL + "room/")
+        .then((response) => {
+          console.log(response.data);
+          const rooms = response.data.map((room) => ({
+            id: room.id,
+            name: room.name,
+          }));
+          commit("setRooms", rooms);
+        })
+        .catch((error) => {
+          console.error("Error fetching rooms:", error);
+        });
+    },
     fetchAuthentication({ commit }) {
       axios
         .get(process.env.VUE_APP_BASE_URL + "check_login_status/")
@@ -80,9 +99,10 @@ const store = createStore({
         });
     },
     fetchMessages({ state, commit }) {
+      console.log(state.currentRoom);
       if (state.currentRoom === null) {
         console.error("currentRoom is not set");
-        return;
+        return Promise.reject("currentRoom is not set");
       }
       axios
         .get(process.env.VUE_APP_BASE_URL + "messages/", {

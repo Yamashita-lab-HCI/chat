@@ -55,6 +55,7 @@ export default {
   computed: {
     ...mapState({
       isAuthenticated: (state) => state.isLoggedIn,
+      rooms: (state) => state.rooms,
     }),
   },
   data() {
@@ -64,9 +65,16 @@ export default {
   },
   created() {
     this.fetchAuthentication();
+    this.fetchRooms();
   },
   methods: {
-    ...mapActions(["logOut", "selectRoom", "addRoom", "fetchAuthentication"]),
+    ...mapActions([
+      "logOut",
+      "addRoom",
+      "fetchAuthentication",
+      "fetchRooms",
+      "fetchMessages",
+    ]),
     goToHome() {
       this.$router.push("/home").then(() => {
         location.reload();
@@ -74,6 +82,10 @@ export default {
     },
     goToProfile() {
       this.$router.push("/user-profile");
+    },
+    selectRoom(room) {
+      this.$router.push(`/room/${room.id}`);
+      // this.fetchMessages();
     },
     logout() {
       const csrfToken = this.getCookie("csrftoken");
@@ -127,8 +139,21 @@ export default {
             }
           )
           .then((response) => {
-            this.addRoom({ name: roomName });
-            this.$router.push(`/room/${response.data.roomId}`);
+            const roomId = response.data.roomId;
+            this.addRoom({ name: roomName, id: roomId });
+            axios
+              .get(process.env.VUE_APP_BASE_URL + `room/${roomId}/`)
+              .then(() => {
+                this.currentRoom = response.data;
+                this.$router.push(`/room/${roomId}`);
+              })
+              .catch((error) => {
+                console.error("Failed to get room info:", error);
+                console.error("Server response:", error.response.data);
+                alert(
+                  `Failed to get room info: ${error.response.data.detail || "Please try again."}`
+                );
+              });
           })
           .catch((error) => {
             console.error("Failed to create room:", error);
