@@ -1,6 +1,11 @@
 <template>
   <div class="home">
-    <VaAlert color="primary" border="top" border-color="primary" class="mb-6">
+    <VaAlert
+      color="primary"
+      border="top"
+      border-color="primary"
+      class="mb-6 alert-full-width"
+    >
       Chatting Room
     </VaAlert>
     <div class="chat-container">
@@ -69,6 +74,10 @@ export default {
 .home {
   display: flex;
   flex-direction: column;
+}
+
+.alert-full-width {
+  width: 100%; /* VaAlertコンポーネントの幅を100%に設定 */
 }
 
 .chat-container {
