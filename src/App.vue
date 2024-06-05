@@ -140,20 +140,11 @@ export default {
           )
           .then((response) => {
             const roomId = response.data.roomId;
+            console.log("roomId is ", roomId);
             this.addRoom({ name: roomName, id: roomId });
-            axios
-              .get(process.env.VUE_APP_BASE_URL + `room/${roomId}/`)
-              .then(() => {
-                this.currentRoom = response.data;
-                this.$router.push(`/room/${roomId}`);
-              })
-              .catch((error) => {
-                console.error("Failed to get room info:", error);
-                console.error("Server response:", error.response.data);
-                alert(
-                  `Failed to get room info: ${error.response.data.detail || "Please try again."}`
-                );
-              });
+            console.log("response is" + response.data);
+            this.$store.commit("setCurrentRoom", roomId);
+            this.$router.push(`/room/${roomId}`);
           })
           .catch((error) => {
             console.error("Failed to create room:", error);

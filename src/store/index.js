@@ -46,8 +46,8 @@ const store = createStore({
     setSocket(state, socket) {
       state.socket = socket;
     },
-    addRoom(state, roomName) {
-      state.rooms = [...state.rooms, { name: roomName }];
+    addRoom(state, room) {
+      state.rooms = [...state.rooms, room];
     },
     updateUsernameValidation(state, isValid) {
       state.isUsernameValid = isValid;
@@ -163,8 +163,8 @@ const store = createStore({
     logOut({ commit }) {
       commit("setLoggedIn", false);
     },
-    addRoom({ commit }, roomName) {
-      commit("addRoom", roomName);
+    addRoom({ commit }, room) {
+      commit("addRoom", room);
     },
     selectRoom({ commit }, room) {
       commit("setCurrentRoom", room);
