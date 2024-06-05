@@ -15,14 +15,22 @@ const store = createStore({
       isPasswordValid: false,
       isLoggedIn: false,
       socket: new WebSocket(process.env.VUE_APP_WS_URL),
+      showQuoteButton: {},
+      roomId: null,
     };
   },
   mutations: {
+    setRooms(state, rooms) {
+      state.rooms = rooms;
+    },
     setLoggedIn(state, status) {
       state.isLoggedIn = status; // ログイン状態を更新
     },
     setCurrentUser(state, user) {
       state.currentUser = user;
+    },
+    setCurrentRoom(state, room) {
+      state.currentRoom = room;
     },
     updateMessage(state, newMessage) {
       const transformedMessage = {
@@ -38,8 +46,8 @@ const store = createStore({
     setSocket(state, socket) {
       state.socket = socket;
     },
-    addRoom(state, roomName) {
-      state.rooms.push({ name: roomName });
+    addRoom(state, room) {
+      state.rooms = [...state.rooms, room];
     },
     updateUsernameValidation(state, isValid) {
       state.isUsernameValid = isValid;
@@ -47,8 +55,26 @@ const store = createStore({
     updatePasswordValidation(state, isValid) {
       state.isPasswordValid = isValid;
     },
+    SET_ROOM_ID(state, roomId) {
+      state.roomId = roomId;
+    },
   },
   actions: {
+    fetchRooms({ commit }) {
+      axios
+        .get(process.env.VUE_APP_BASE_URL + "room/")
+        .then((response) => {
+          console.log(response.data);
+          const rooms = response.data.map((room) => ({
+            id: room.id,
+            name: room.name,
+          }));
+          commit("setRooms", rooms);
+        })
+        .catch((error) => {
+          console.error("Error fetching rooms:", error);
+        });
+    },
     fetchAuthentication({ commit }) {
       axios
         .get(process.env.VUE_APP_BASE_URL + "check_login_status/")
@@ -72,9 +98,18 @@ const store = createStore({
           console.error("Error fetching current user:", error);
         });
     },
-    fetchMessages({ commit }) {
+    fetchMessages({ state, commit }) {
+      console.log(state.currentRoom);
+      if (state.currentRoom === null) {
+        console.error("currentRoom is not set");
+        return Promise.reject("currentRoom is not set");
+      }
       axios
-        .get(process.env.VUE_APP_BASE_URL + "messages/")
+        .get(process.env.VUE_APP_BASE_URL + "messages/", {
+          params: {
+            room_id: state.currentRoom,
+          },
+        })
         .then((response) => {
           commit("setMessages", response.data);
         })
@@ -82,23 +117,24 @@ const store = createStore({
           console.error("Error fetching messages:", error);
         });
     },
-    addMessage({ commit, state }, newText) {
+    addMessage({ commit, state }, messageData) {
       return new Promise((resolve, reject) => {
+        console.log("messageData:", messageData);
         const username = localStorage.getItem("username");
         if (!username) {
           console.error("Username is not set");
           reject("Username is not set");
           return;
         }
-        // newTextが空白の場合は送信をスキップ
-        if (!newText || newText.trim() === "") {
+        if (!messageData) {
           console.error("Message is empty");
           reject("Message is empty");
           return;
         }
         const newMessage = {
           username: username,
-          message: newText,
+          message: messageData,
+          room_id: state.currentRoom,
         };
         console.log("New message:", newMessage);
         state.socket.send(JSON.stringify(newMessage));
@@ -108,7 +144,9 @@ const store = createStore({
             console.log("Message posted successfully");
             const returnedMessage = response.data.new_message;
             commit("updateMessage", returnedMessage);
-            state.showQuoteButton[returnedMessage.id] = false;
+            if (!(returnedMessage.id in state.showQuoteButton)) {
+              state.showQuoteButton[returnedMessage.id] = false;
+            }
             resolve(returnedMessage);
           })
           .catch((error) => {
@@ -125,17 +163,20 @@ const store = createStore({
     logOut({ commit }) {
       commit("setLoggedIn", false);
     },
-    addRoom({ commit }, roomName) {
-      commit("addRoom", roomName);
+    addRoom({ commit }, room) {
+      commit("addRoom", room);
     },
     selectRoom({ commit }, room) {
-      commit("selectRoom", room);
+      commit("setCurrentRoom", room);
     },
     updateUsernameValidation({ commit }, isValid) {
       commit("updateUsernameValidation", isValid);
     },
     updatePasswordValidation({ commit }, isValid) {
       commit("updatePasswordValidation", isValid);
+    },
+    setRoomId({ commit }, roomId) {
+      commit("SET_ROOM_ID", roomId);
     },
   },
 });
@@ -159,7 +200,12 @@ store.state.socket.onmessage = function (event) {
   } else {
     data = JSON.parse(event.data);
   }
-  if (data.type === "message" && data.message.text.trim() !== "") {
+  if (
+    data.type === "message" &&
+    data.message &&
+    data.message.text &&
+    data.message.text.trim() !== ""
+  ) {
     console.log("Received message data:", data.message);
     store.commit("updateMessage", data.message);
   }

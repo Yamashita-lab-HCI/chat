@@ -55,6 +55,7 @@ export default {
   computed: {
     ...mapState({
       isAuthenticated: (state) => state.isLoggedIn,
+      rooms: (state) => state.rooms,
     }),
   },
   data() {
@@ -64,9 +65,16 @@ export default {
   },
   created() {
     this.fetchAuthentication();
+    this.fetchRooms();
   },
   methods: {
-    ...mapActions(["logOut", "selectRoom", "addRoom", "fetchAuthentication"]),
+    ...mapActions([
+      "logOut",
+      "addRoom",
+      "fetchAuthentication",
+      "fetchRooms",
+      "fetchMessages",
+    ]),
     goToHome() {
       this.$router.push("/home").then(() => {
         location.reload();
@@ -74,6 +82,10 @@ export default {
     },
     goToProfile() {
       this.$router.push("/user-profile");
+    },
+    selectRoom(room) {
+      this.$router.push(`/room/${room.id}`);
+      // this.fetchMessages();
     },
     logout() {
       const csrfToken = this.getCookie("csrftoken");
@@ -116,7 +128,31 @@ export default {
     createNewRoom() {
       const roomName = prompt("Enter a name for the new chat room:");
       if (roomName) {
-        this.addRoom({ name: roomName });
+        axios
+          .post(
+            process.env.VUE_APP_BASE_URL + "create-room/",
+            { roomName: roomName },
+            {
+              headers: {
+                "X-CSRFToken": window.csrfToken,
+              },
+            }
+          )
+          .then((response) => {
+            const roomId = response.data.roomId;
+            console.log("roomId is ", roomId);
+            this.addRoom({ name: roomName, id: roomId });
+            console.log("response is" + response.data);
+            this.$store.commit("setCurrentRoom", roomId);
+            this.$router.push(`/room/${roomId}`);
+          })
+          .catch((error) => {
+            console.error("Failed to create room:", error);
+            console.error("Server response:", error.response.data);
+            alert(
+              `Room creation failed: ${error.response.data.detail || "Please try again."}`
+            );
+          });
       }
     },
   },
