@@ -8,12 +8,8 @@
       @mouseleave="handleMouseLeave(msg.id)"
     >
       <VaCardTitle>
-        <MdIcon
-          :name="getIconName()"
-          color="red"
-          class="message-icon"
-          size="24"
-        />
+        <div class="icon" :style="{ backgroundColor: iconColor }"></div>
+        <div>Icon Color: {{ iconColor }}</div>
         <span class="message-user">{{ msg.user__username }}</span>
       </VaCardTitle>
       <VaCardContent>
@@ -39,7 +35,6 @@
 </template>
 
 <script>
-import { MdIcon } from "mdi-vue";
 import { Return32 } from "@carbon/icons-vue";
 import CommandPalette from "./CommandPalette.vue"; // CommandPaletteをインポート
 import { useStore, mapState } from "vuex";
@@ -48,12 +43,14 @@ import { reactive, toRefs, watch, onMounted, ref } from "vue";
 export default {
   name: "MessageList",
   components: {
-    MdIcon,
     Return32,
     CommandPalette,
   },
   props: {
     messages: Array,
+  },
+  computed: {
+    ...mapState(["iconColor"]),
   },
   setup(props, context) {
     const store = useStore();
@@ -63,8 +60,9 @@ export default {
       isAuthenticated: false,
     });
 
-    const { isAuthenticated } = mapState({
+    const { isAuthenticated, currentUser } = mapState({
       isAuthenticated: (state) => state.isLoggedIn,
+      currentUser: (state) => state.currentUser,
     });
 
     onMounted(() => {
@@ -94,7 +92,11 @@ export default {
     );
 
     function getIconName() {
-      return "mdi-home";
+      return currentUser.icon;
+    }
+
+    function getIconColor() {
+      return currentUser.iconColor;
     }
 
     function handleMouseOver(id) {
@@ -142,6 +144,7 @@ export default {
       handleSend,
       isAuthenticated,
       getIconName,
+      getIconColor,
       handleMouseOver,
       handleMouseLeave,
     };
@@ -156,6 +159,12 @@ export default {
   padding: 16px;
   position: relative;
   z-index: 1;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
 }
 
 .quote-button {

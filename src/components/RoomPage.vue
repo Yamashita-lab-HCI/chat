@@ -55,6 +55,9 @@ export default {
       return this.$store.state.currentRoom;
     },
   },
+  created() {
+    this.$store.dispatch("fetchIconColor");
+  },
   methods: {
     addMessage() {
       this.$store.dispatch("addMessage", this.inputMessage);

@@ -1,7 +1,9 @@
 // import Vue from "vue";
 import { createStore } from "vuex";
+// import { getCookie } from ".//../../utils.js";
 import axios from "axios"; // Axios をインポート
 // import dummyData from "@/dummyData";
+// import { stringify } from "flatted";
 
 const store = createStore({
   state() {
@@ -17,9 +19,13 @@ const store = createStore({
       socket: new WebSocket(process.env.VUE_APP_WS_URL),
       showQuoteButton: {},
       roomId: null,
+      iconColor: null,
     };
   },
   mutations: {
+    setIconColor(state, color) {
+      state.iconColor = color;
+    },
     setRooms(state, rooms) {
       state.rooms = rooms;
     },
@@ -60,6 +66,36 @@ const store = createStore({
     },
   },
   actions: {
+    fetchIconColor({ commit, state }) {
+      axios
+        .get(process.env.VUE_APP_BASE_URL + "get_icon_color/", {
+          params: {
+            username: state.currentUser.username,
+          },
+        })
+        .then((response) => {
+          commit("setIconColor", response.data.color);
+        })
+        .catch((error) => {
+          console.error("Error fetching icon color:", error);
+        });
+    },
+    updateIconColor({ commit, state }, color) {
+      const username = state.currentUser.username;
+      console.log(username);
+      console.log(color);
+      axios
+        .post(process.env.VUE_APP_BASE_URL + "update_icon_color/", {
+          username: username,
+          color: color,
+        })
+        .then(() => {
+          commit("setIconColor", color);
+        })
+        .catch((error) => {
+          console.error("Error updating icon color:", error);
+        });
+    },
     fetchRooms({ commit }) {
       axios
         .get(process.env.VUE_APP_BASE_URL + "room/")
@@ -91,6 +127,7 @@ const store = createStore({
       axios
         .get(process.env.VUE_APP_BASE_URL + "get_current_user/")
         .then((response) => {
+          console.log("Current user:", response.data);
           commit("setCurrentUser", response.data);
           localStorage.setItem("username", response.data.username);
         })

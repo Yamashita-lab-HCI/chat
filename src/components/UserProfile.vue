@@ -15,7 +15,7 @@
       Please choose your icon color!
     </VaAlert>
     <div class="icon-container alert-spacing">
-      <div class="icon" :style="{ backgroundColor: colorMap[iconColor] }"></div>
+      <div class="icon" :style="{ backgroundColor: iconColor }"></div>
     </div>
     <VaButton
       v-for="color in colors"
@@ -29,26 +29,54 @@
 </template>
 
 <script>
+import { mapActions, useStore } from "vuex";
+import { useColors } from "vuestic-ui";
+import { ref, onMounted } from "vue";
+
 export default {
   name: "UserProfile",
-  data() {
+  setup() {
+    const store = useStore();
+    const iconColor = ref("primary");
+    const colors = ref([
+      "primary",
+      "secondary",
+      "success",
+      "info",
+      "danger",
+      "warning",
+    ]);
+
+    const { getColor } = useColors();
+
+    const changeIconColor = (colorName) => {
+      const color = getColor(colorName);
+      if (!color) {
+        console.error(`Color "${colorName}" not found in Vuestic config.`);
+        return;
+      }
+      store
+        .dispatch("updateIconColor", color)
+        .then(() => {
+          iconColor.value = color;
+        })
+        .catch((error) => {
+          console.error("Error updating icon color:", error);
+        });
+    };
+
+    onMounted(() => {
+      store.dispatch("fetchIconColor");
+    });
+
     return {
-      iconColor: "primary",
-      colors: ["primary", "secondary", "success", "info", "danger", "warning"],
-      colorMap: {
-        primary: "#154EC1",
-        secondary: "#666E75",
-        success: "#3D9209",
-        info: "#158DE3",
-        danger: "#E42222",
-        warning: "#FFD43A",
-      },
+      iconColor,
+      colors,
+      changeIconColor,
     };
   },
   methods: {
-    changeIconColor(color) {
-      this.iconColor = color;
-    },
+    ...mapActions(["updateIconColor"]),
   },
 };
 </script>

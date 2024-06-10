@@ -62,7 +62,14 @@ export default {
         console.log(response.data);
         this.$store.commit("setCurrentRoom", 0);
         this.$store.dispatch("fetchMessages");
-        this.$store.dispatch("fetchCurrentUser");
+        this.$store.dispatch("fetchCurrentUser").then((currentUser) => {
+          console.log("Current user:", currentUser);
+          if (currentUser) {
+            this.$store.dispatch("fetchIconColor");
+          } else {
+            console.error("Current user is null");
+          }
+        });
       })
       .catch((error) => {
         console.error(error);
@@ -75,7 +82,14 @@ export default {
     currentRoom() {
       return this.$store.state.currentRoom;
     },
+    currentUser() {
+      return this.$strore.state.currentUser;
+    },
   },
+
+  /*created() {
+    this.$store.dispatch("fetchIconColor");
+  }, */
   methods: {
     getCookie(name) {
       let cookieValue = null;
