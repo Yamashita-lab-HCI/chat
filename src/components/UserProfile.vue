@@ -65,8 +65,11 @@ export default {
         });
     };
 
-    onMounted(() => {
-      store.dispatch("fetchIconColor");
+    onMounted(async () => {
+      const fetchedColor = await store.dispatch("fetchIconColor");
+      if (fetchedColor) {
+        iconColor.value = fetchedColor;
+      }
     });
 
     return {
