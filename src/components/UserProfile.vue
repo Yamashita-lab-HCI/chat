@@ -15,7 +15,7 @@
       Please choose your icon color!
     </VaAlert>
     <div class="icon-container alert-spacing">
-      <div class="icon" :style="{ backgroundColor: iconColor }"></div>
+      <div class="icon" :style="{ backgroundColor: cssColor }"></div>
     </div>
     <VaButton
       v-for="color in colors"
@@ -31,13 +31,39 @@
 <script>
 import { mapActions, useStore } from "vuex";
 import { useColors } from "vuestic-ui";
-import { ref, onMounted } from "vue";
+import { ref, computed } from "vue";
+import axios from "axios";
 
 export default {
   name: "UserProfile",
   setup() {
     const store = useStore();
     const iconColor = ref("primary");
+    const username = store.state.currentUser.username;
+    const initializeIconColor = async () => {
+      try {
+        const response = await axios.get(
+          process.env.VUE_APP_BASE_URL + "get_icon_color/",
+          {
+            params: {
+              username: username,
+            },
+          }
+        );
+        if (response.data && response.data.color) {
+          iconColor.value = response.data.color;
+        } else {
+          console.error(
+            `Unexpected response format for ${username}:`,
+            response.data
+          );
+        }
+      } catch (error) {
+        console.error(`Error fetching icon color for ${username}:`, error);
+      }
+    };
+
+    initializeIconColor();
     const colors = ref([
       "primary",
       "secondary",
@@ -65,17 +91,21 @@ export default {
         });
     };
 
-    onMounted(async () => {
+    const fetchIconColor = async () => {
       const fetchedColor = await store.dispatch("fetchIconColor");
+      console.log(fetchedColor);
       if (fetchedColor) {
         iconColor.value = fetchedColor;
       }
-    });
+    };
+    fetchIconColor();
+    const cssColor = computed(() => getColor(iconColor.value));
 
     return {
       iconColor,
       colors,
       changeIconColor,
+      cssColor,
     };
   },
   methods: {

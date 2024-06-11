@@ -75,6 +75,7 @@ const store = createStore({
         })
         .then((response) => {
           commit("setIconColor", response.data.color);
+          return response.data.color;
         })
         .catch((error) => {
           console.error("Error fetching icon color:", error);
