@@ -8,12 +8,10 @@
       @mouseleave="handleMouseLeave(msg.id)"
     >
       <VaCardTitle>
-        <MdIcon
-          :name="getIconName()"
-          color="red"
-          class="message-icon"
-          size="24"
-        />
+        <div
+          class="icon"
+          :style="{ backgroundColor: getIconColor(msg.user__username) }"
+        ></div>
         <span class="message-user">{{ msg.user__username }}</span>
       </VaCardTitle>
       <VaCardContent>
@@ -39,21 +37,23 @@
 </template>
 
 <script>
-import { MdIcon } from "mdi-vue";
 import { Return32 } from "@carbon/icons-vue";
 import CommandPalette from "./CommandPalette.vue"; // CommandPaletteをインポート
 import { useStore, mapState } from "vuex";
 import { reactive, toRefs, watch, onMounted, ref } from "vue";
+import axios from "axios";
 
 export default {
   name: "MessageList",
   components: {
-    MdIcon,
     Return32,
     CommandPalette,
   },
   props: {
     messages: Array,
+  },
+  computed: {
+    ...mapState(["iconColor"]),
   },
   setup(props, context) {
     const store = useStore();
@@ -62,15 +62,41 @@ export default {
       quotedMessage: "",
       isAuthenticated: false,
     });
+    const iconColors = reactive({});
 
-    const { isAuthenticated } = mapState({
+    const { isAuthenticated, currentUser } = mapState({
       isAuthenticated: (state) => state.isLoggedIn,
+      currentUser: (state) => state.currentUser,
     });
 
-    onMounted(() => {
-      props.messages.forEach((msg) => {
-        state.showQuoteButton[msg.id] = false;
-      });
+    onMounted(async () => {
+      const usernames = [
+        ...new Set(props.messages.map((msg) => msg.user__username)),
+      ];
+      // console.log(usernames);
+      // 各ユーザーのアイコンの色を取得
+      for (const username of usernames) {
+        try {
+          const response = await axios.get(
+            process.env.VUE_APP_BASE_URL + "get_icon_color/",
+            {
+              params: {
+                username: username,
+              },
+            }
+          );
+          if (response.data && response.data.color) {
+            iconColors[username] = response.data.color;
+          } else {
+            console.error(
+              `Unexpected response format for ${username}:`,
+              response.data
+            );
+          }
+        } catch (error) {
+          console.error(`Error fetching icon color for ${username}:`, error);
+        }
+      }
     });
 
     watch(
@@ -94,7 +120,12 @@ export default {
     );
 
     function getIconName() {
-      return "mdi-home";
+      return currentUser.icon;
+    }
+
+    function getIconColor(username) {
+      console.log(iconColors[username]);
+      return iconColors[username];
     }
 
     function handleMouseOver(id) {
@@ -142,6 +173,7 @@ export default {
       handleSend,
       isAuthenticated,
       getIconName,
+      getIconColor,
       handleMouseOver,
       handleMouseLeave,
     };
@@ -156,6 +188,12 @@ export default {
   padding: 16px;
   position: relative;
   z-index: 1;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
 }
 
 .quote-button {
@@ -198,6 +236,7 @@ export default {
 .message-user {
   font-weight: bold;
   margin-right: 10px;
+  margin-left: 10px;
 }
 
 .message-list {
