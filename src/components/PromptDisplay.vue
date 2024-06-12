@@ -18,6 +18,7 @@
 <script setup>
 import { reactive } from "vue";
 import axios from "axios";
+import { useStore } from "vuex";
 
 const state = reactive({
   prompt: "",
@@ -34,6 +35,8 @@ const http = axios.create({
     Authorization: `Bearer ${API_KEY}`,
   },
 });
+
+const store = useStore();
 
 async function askChatGPT() {
   if (!state.prompt.trim()) {
@@ -54,6 +57,13 @@ async function askChatGPT() {
       2000
     ); // 最大3回のリトライ、リトライ間隔2000ミリ秒
     state.response = result.data.choices[0].message.content;
+
+    // GPTからの応答を取得した後、その質問と回答をバックエンドに送信
+    await axios.post(process.env.VUE_APP_BASE_URL + "record/", {
+      username: store.state.currentUser,
+      question: state.prompt,
+      answer: state.response,
+    });
   } catch (error) {
     console.error("ChatGPTからの応答の取得に失敗しました:", error);
     if (error.response && error.response.data && error.response.data.error) {
