@@ -29,7 +29,7 @@
     "vuestic-admin": "^0.0.1-security",
     "vuestic-ui": "^1.9.9",
     "vuex": "^4.1.0",
-    "ws": "^8.17.0"
+    "ws": "^8.17.1"
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",
