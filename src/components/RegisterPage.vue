@@ -58,6 +58,7 @@ export default {
         this.updateUsernameValidation(true);
       }
       */
+      console.log(process.env.VUE_APP_BASE_URL); // 正しく 'https://chatawesome.net/api/' を出力することを確認します
       axios
         .post(
           process.env.VUE_APP_BASE_URL + "check_username/",
