@@ -2,12 +2,28 @@
   <div class="prompt-display">
     <h2>🧑 Ask ChatGPT!</h2>
     <div class="input-group">
-      <input
+      <textarea
         class="input"
         placeholder="Please type in your questions."
         v-model="state.prompt"
-      />
-      <button @click="askChatGPT" class="btn">Send</button>
+      ></textarea>
+    </div>
+    <div class="va-title">
+      Please click the button that best suits your purpose:
+    </div>
+    <div class="input-group">
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('translate')">
+        Translation
+      </VaButton>
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('decision')">
+        Decision
+      </VaButton>
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('opinion')">
+        Opinion
+      </VaButton>
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('keywords')">
+        Keyword
+      </VaButton>
     </div>
     <div class="response">
       <pre>{{ state.response }}</pre>
@@ -38,27 +54,51 @@ const http = axios.create({
 
 const store = useStore();
 
-async function askChatGPT() {
+async function askChatGPT(purpose) {
   if (!state.prompt.trim()) {
     state.response = "⚠️ 質問を入力してください。";
     return;
   }
 
+  let requestData = {
+    model: "gpt-3.5-turbo",
+    messages: [{ role: "user", content: state.prompt }],
+    max_tokens: 256,
+    temperature: 0.7,
+  };
+
+  // 目的に応じたリクエストデータの調整
+  switch (purpose) {
+    case "translate":
+      requestData.messages[0].content =
+        "Translate the given text into English: " + state.prompt;
+      break;
+    case "decision":
+      requestData.messages[0].content =
+        "Answer in English. Provide decision-making support based on the given input: " +
+        state.prompt;
+      break;
+    case "opinion":
+      requestData.messages[0].content =
+        "Answer in English. Provide an opinion on the given topic: " +
+        state.prompt;
+      break;
+    case "keywords":
+      requestData.messages[0].content =
+        "Answer in English. Extract only the important keywords from the given text: " +
+        state.prompt;
+      break;
+  }
+
   try {
     const result = await makeRequestWithRetry(
       "chat/completions",
-      {
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: state.prompt }],
-        max_tokens: 256,
-        temperature: 0.7,
-      },
+      requestData,
       3,
       2000
-    ); // 最大3回のリトライ、リトライ間隔2000ミリ秒
+    );
     state.response = result.data.choices[0].message.content;
 
-    // GPTからの応答を取得した後、その質問と回答をバックエンドに送信
     await axios.post(process.env.VUE_APP_BASE_URL + "record/", {
       username: store.state.currentUser,
       question: state.prompt,
@@ -83,7 +123,7 @@ async function makeRequestWithRetry(url, data, retries, delay) {
       if (i < retries && error.response && error.response.status === 429) {
         await new Promise((resolve) =>
           setTimeout(resolve, delay * Math.pow(2, i))
-        ); // 指数的バックオフ
+        );
       } else {
         throw error;
       }
@@ -102,12 +142,15 @@ async function makeRequestWithRetry(url, data, retries, delay) {
 .input-group {
   display: flex;
   gap: 10px;
+  justify-content: space-between;
 }
 .input {
   flex-grow: 1;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  min-height: 100px;
+  resize: vertical;
 }
 .btn {
   padding: 10px 20px;
@@ -124,5 +167,9 @@ async function makeRequestWithRetry(url, data, retries, delay) {
   background-color: #f8f9fa;
   padding: 20px;
   border-radius: 5px;
+  word-wrap: break-word;
+}
+.response > pre {
+  white-space: pre-wrap;
 }
 </style>
