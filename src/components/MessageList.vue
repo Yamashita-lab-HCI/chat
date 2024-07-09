@@ -38,9 +38,9 @@
 
 <script>
 import { Return32 } from "@carbon/icons-vue";
-import CommandPalette from "./CommandPalette.vue"; // CommandPaletteをインポート
-import { useStore, mapState } from "vuex";
-import { reactive, toRefs, watch, onMounted, ref } from "vue";
+import CommandPalette from "./CommandPalette.vue";
+import { mapState } from "vuex";
+import { reactive, toRefs, watch, onMounted, onBeforeUnmount, ref } from "vue";
 import axios from "axios";
 
 export default {
@@ -50,17 +50,16 @@ export default {
     CommandPalette,
   },
   props: {
-    messages: Array,
-  },
-  computed: {
-    ...mapState(["iconColor"]),
+    roomName: String,
   },
   setup(props, context) {
-    const store = useStore();
+    // const store = useStore();
     const state = reactive({
       showQuoteButton: ref({}),
       quotedMessage: "",
       isAuthenticated: false,
+      messages: [],
+      websocket: null,
     });
     const iconColors = reactive({});
 
@@ -69,63 +68,72 @@ export default {
       currentUser: (state) => state.currentUser,
     });
 
-    onMounted(async () => {
-      const usernames = [
-        ...new Set(props.messages.map((msg) => msg.user__username)),
-      ];
-      // console.log(usernames);
-      // 各ユーザーのアイコンの色を取得
-      for (const username of usernames) {
-        try {
-          const response = await axios.get(
-            process.env.VUE_APP_BASE_URL + "get_icon_color/",
-            {
-              params: {
-                username: username,
-              },
-            }
-          );
-          if (response.data && response.data.color) {
-            iconColors[username] = response.data.color;
-          } else {
-            console.error(
-              `Unexpected response format for ${username}:`,
-              response.data
-            );
-          }
-        } catch (error) {
-          console.error(`Error fetching icon color for ${username}:`, error);
-        }
-      }
+    onMounted(() => {
+      connectWebSocket();
+    });
+
+    onBeforeUnmount(() => {
+      disconnectWebSocket();
     });
 
     watch(
-      () => props.messages,
-      (newMessages) => {
-        newMessages.forEach((message) => {
-          if (
-            !Object.prototype.hasOwnProperty.call(
-              state.showQuoteButton,
-              message.id
-            )
-          ) {
-            state.showQuoteButton = {
-              ...state.showQuoteButton,
-              [message.id]: false,
-            };
-          }
-        });
-      },
-      { immediate: true }
+      () => props.roomName,
+      () => {
+        disconnectWebSocket();
+        connectWebSocket();
+      }
     );
 
-    function getIconName() {
-      return currentUser.icon;
+    function connectWebSocket() {
+      state.websocket = new WebSocket(
+        `ws://localhost:8000/ws/chat/${props.roomName}/`
+      );
+
+      state.websocket.onopen = () => {
+        console.log("WebSocket connected");
+      };
+
+      state.websocket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "chat_message") {
+          state.messages.unshift(data.message);
+          updateIconColor(data.message.user__username);
+        }
+      };
+
+      state.websocket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+
+      state.websocket.onclose = () => {
+        console.log("WebSocket disconnected");
+      };
+    }
+
+    function disconnectWebSocket() {
+      if (state.websocket) {
+        state.websocket.close();
+      }
+    }
+
+    async function updateIconColor(username) {
+      try {
+        const response = await axios.get(
+          process.env.VUE_APP_BASE_URL + "get_icon_color/",
+          {
+            params: { username: username },
+          }
+        );
+        if (response.data && response.data.color) {
+          iconColors[username] = response.data.color;
+        }
+      } catch (error) {
+        console.error(`Error fetching icon color for ${username}:`, error);
+      }
     }
 
     function getIconColor(username) {
-      console.log(iconColors[username]);
-      return iconColors[username];
+      return iconColors[username] || "#000000";
     }
 
     function handleMouseOver(id) {
@@ -150,20 +158,14 @@ export default {
       if (!content || content.trim() === "") {
         return;
       }
-      store.dispatch("addMessage", content).then((newMessage) => {
-        console.log("newMessage:", newMessage); // デバッグログを追加
-        if (newMessage && newMessage.id) {
-          context.emit("update-messages", [newMessage, ...props.messages]);
-          state.showQuoteButton[newMessage.id] = false;
-          Object.keys(state.showQuoteButton).forEach((key) => {
-            if (key !== newMessage.id) {
-              state.showQuoteButton[key] = false;
-            }
-          });
-        } else {
-          console.error("newMessage does not have an id:", newMessage);
-        }
-      });
+      if (state.websocket && state.websocket.readyState === WebSocket.OPEN) {
+        state.websocket.send(
+          JSON.stringify({
+            message: content,
+            username: currentUser.username,
+          })
+        );
+      }
     }
 
     return {
@@ -172,7 +174,6 @@ export default {
       clearQuotedMessage,
       handleSend,
       isAuthenticated,
-      getIconName,
       getIconColor,
       handleMouseOver,
       handleMouseLeave,

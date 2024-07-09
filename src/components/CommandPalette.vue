@@ -40,7 +40,7 @@ export default {
             "italic",
             "|",
             "link",
-            "uploadImage",
+            // "uploadImage",
             "blockQuote",
             "|",
             "bulletedList",

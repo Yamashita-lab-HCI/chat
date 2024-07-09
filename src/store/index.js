@@ -1,9 +1,5 @@
-// import Vue from "vue";
 import { createStore } from "vuex";
-// import { getCookie } from ".//../../utils.js";
-import axios from "axios"; // Axios をインポート
-// import dummyData from "@/dummyData";
-// import { stringify } from "flatted";
+import axios from "axios";
 
 const store = createStore({
   state() {
@@ -16,7 +12,7 @@ const store = createStore({
       isUsernameValid: false,
       isPasswordValid: false,
       isLoggedIn: false,
-      socket: new WebSocket(process.env.VUE_APP_WS_URL),
+      socket: null,
       showQuoteButton: {},
       roomId: null,
       iconColor: null,
@@ -30,7 +26,7 @@ const store = createStore({
       state.rooms = rooms;
     },
     setLoggedIn(state, status) {
-      state.isLoggedIn = status; // ログイン状態を更新
+      state.isLoggedIn = status;
     },
     setCurrentUser(state, user) {
       state.currentUser = user;
@@ -38,16 +34,11 @@ const store = createStore({
     setCurrentRoom(state, room) {
       state.currentRoom = room;
     },
-    updateMessage(state, newMessage) {
-      const transformedMessage = {
-        user__username: newMessage.username,
-        text: newMessage.message,
-      };
-      state.messages = [...state.messages, transformedMessage];
-      console.log("Updated messages:", state.messages);
-    },
     setMessages(state, messages) {
       state.messages = messages;
+    },
+    addMessage(state, message) {
+      state.messages.unshift(message);
     },
     setSocket(state, socket) {
       state.socket = socket;
@@ -67,11 +58,9 @@ const store = createStore({
   },
   actions: {
     fetchIconColor({ commit, state }) {
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "get_icon_color/", {
-          params: {
-            username: state.currentUser.username,
-          },
+          params: { username: state.currentUser.username },
         })
         .then((response) => {
           commit("setIconColor", response.data.color);
@@ -83,9 +72,7 @@ const store = createStore({
     },
     updateIconColor({ commit, state }, color) {
       const username = state.currentUser.username;
-      console.log(username);
-      console.log(color);
-      axios
+      return axios
         .post(process.env.VUE_APP_BASE_URL + "update_icon_color/", {
           username: username,
           color: color,
@@ -98,10 +85,9 @@ const store = createStore({
         });
     },
     fetchRooms({ commit }) {
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "room/")
         .then((response) => {
-          console.log(response.data);
           const rooms = response.data.map((room) => ({
             id: room.id,
             name: room.name,
@@ -113,22 +99,20 @@ const store = createStore({
         });
     },
     fetchAuthentication({ commit }) {
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "check_login_status/")
         .then((response) => {
           commit("setLoggedIn", response.data.isLoggedIn);
         })
         .catch((error) => {
           console.error("Error fetching authentication status:", error);
-          commit("setLoggedIn", false); // エラーが発生した場合、ログイン状態を false に設定
+          commit("setLoggedIn", false);
         });
     },
     fetchCurrentUser({ commit }) {
-      console.log("fetchMessages action called");
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "get_current_user/")
         .then((response) => {
-          console.log("Current user:", response.data);
           commit("setCurrentUser", response.data);
           localStorage.setItem("username", response.data.username);
         })
@@ -137,16 +121,13 @@ const store = createStore({
         });
     },
     fetchMessages({ state, commit }) {
-      console.log(state.currentRoom);
       if (state.currentRoom === null) {
         console.error("currentRoom is not set");
         return Promise.reject("currentRoom is not set");
       }
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "messages/", {
-          params: {
-            room_id: state.currentRoom,
-          },
+          params: { room_id: state.currentRoom },
         })
         .then((response) => {
           commit("setMessages", response.data);
@@ -155,44 +136,53 @@ const store = createStore({
           console.error("Error fetching messages:", error);
         });
     },
-    addMessage({ commit, state }, messageData) {
+    initWebSocket({ commit, state, dispatch }) {
+      if (state.currentRoom === null) {
+        console.error("currentRoom is not set");
+        return;
+      }
+
+      const socket = new WebSocket(
+        `${process.env.VUE_APP_WS_URL}/ws/chat/${state.currentRoom}/`
+      );
+
+      socket.onopen = () => {
+        console.log("WebSocket connected");
+      };
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "chat_message") {
+          commit("addMessage", data.message);
+          dispatch("fetchIconColor", data.message.user__username);
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+
+      socket.onclose = () => {
+        console.log("WebSocket disconnected");
+        setTimeout(() => dispatch("initWebSocket"), 5000);
+      };
+
+      commit("setSocket", socket);
+    },
+    sendMessage({ state }, messageData) {
       return new Promise((resolve, reject) => {
-        console.log("messageData:", messageData);
-        const username = localStorage.getItem("username");
-        if (!username) {
-          console.error("Username is not set");
-          reject("Username is not set");
-          return;
+        if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+          const message = {
+            message: messageData,
+            username: state.currentUser.username,
+            room_id: state.currentRoom,
+          };
+          state.socket.send(JSON.stringify(message));
+          resolve();
+        } else {
+          console.error("WebSocket is not open");
+          reject("WebSocket is not open");
         }
-        if (!messageData) {
-          console.error("Message is empty");
-          reject("Message is empty");
-          return;
-        }
-        const newMessage = {
-          username: username,
-          message: messageData,
-          room_id: state.currentRoom,
-        };
-        console.log("New message:", newMessage);
-        state.socket.send(JSON.stringify(newMessage));
-        axios
-          .post(process.env.VUE_APP_BASE_URL + "messages/", newMessage)
-          .then((response) => {
-            console.log("Message posted successfully");
-            const returnedMessage = response.data.new_message;
-            commit("updateMessage", returnedMessage);
-            if (!(returnedMessage.id in state.showQuoteButton)) {
-              state.showQuoteButton[returnedMessage.id] = false;
-            }
-            resolve(returnedMessage);
-          })
-          .catch((error) => {
-            console.error("Failed to post message:", error);
-            console.error("Detailed error:", error.response.data);
-            alert(`Error: ${error.response.data.message}`);
-            reject(error);
-          });
       });
     },
     logIn({ commit }) {
@@ -204,8 +194,9 @@ const store = createStore({
     addRoom({ commit }, room) {
       commit("addRoom", room);
     },
-    selectRoom({ commit }, room) {
+    selectRoom({ commit, dispatch }, room) {
       commit("setCurrentRoom", room);
+      dispatch("initWebSocket");
     },
     updateUsernameValidation({ commit }, isValid) {
       commit("updateUsernameValidation", isValid);
@@ -218,35 +209,5 @@ const store = createStore({
     },
   },
 });
-
-// WebSocketの接続が開始されたときにメッセージを取得
-store.state.socket.onopen = function () {
-  store.state.socket.send(
-    JSON.stringify({
-      type: "fetchMessages",
-    })
-  );
-};
-
-// 新しいメッセージがWebSocketを通じて受信されたときに、それをstateに追加
-store.state.socket.onmessage = function (event) {
-  console.log("WebSocket message received:", event.data);
-  let data;
-  if (event.data instanceof ArrayBuffer) {
-    const decoder = new TextDecoder("utf-8");
-    data = JSON.parse(decoder.decode(event.data));
-  } else {
-    data = JSON.parse(event.data);
-  }
-  if (
-    data.type === "message" &&
-    data.message &&
-    data.message.text &&
-    data.message.text.trim() !== ""
-  ) {
-    console.log("Received message data:", data.message);
-    store.commit("updateMessage", data.message);
-  }
-};
 
 export default store;
