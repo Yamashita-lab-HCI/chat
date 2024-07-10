@@ -182,10 +182,13 @@ const store = createStore({
           "Reason:",
           event.reason
         );
+        commit("setSocket", null);
+        /*
         setTimeout(() => {
           console.log("Attempting to reconnect...");
           this.dispatch("initWebSocket");
         }, 5000);
+        */
       };
       commit("setSocket", socket);
     },

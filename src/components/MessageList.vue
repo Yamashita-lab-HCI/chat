@@ -49,7 +49,6 @@ import {
   computed,
 } from "vue";
 import { useStore } from "vuex";
-import axios from "axios";
 
 export default {
   name: "MessageList",
@@ -66,32 +65,43 @@ export default {
       showQuoteButton: {},
       quotedMessage: "",
       messages: [],
-      websocket: null,
     });
     const iconColors = reactive({});
 
     const isAuthenticated = computed(() => store.state.isLoggedIn);
-    const currentUser = computed(() => store.state.currentUser);
+    // const currentUser = computed(() => store.state.currentUser);
     const currentRoom = computed(() => store.state.currentRoom);
 
     onMounted(() => {
       if (currentRoom.value) {
-        connectWebSocket();
+        store.dispatch("initWebSocket");
       }
     });
 
     onBeforeUnmount(() => {
-      disconnectWebSocket();
-    });
-
-    watch(currentRoom, (newRoom) => {
-      if (newRoom) {
-        disconnectWebSocket();
-        connectWebSocket();
+      if (
+        store.state.socket &&
+        store.state.socket.readyState === WebSocket.OPEN
+      ) {
+        store.state.socket.close();
+        store.commit("setSocket", null);
       }
     });
 
-    function connectWebSocket() {
+    watch(currentRoom, (newRoom, oldRoom) => {
+      if (newRoom !== oldRoom) {
+        if (
+          store.state.socket &&
+          store.state.socket.readyState === WebSocket.OPEN
+        ) {
+          store.state.socket.close();
+          store.commit("setSocket", null);
+        }
+        store.dispatch("initWebSocket");
+      }
+    });
+
+    /*function connectWebSocket() {
       if (!currentRoom.value) {
         console.error("Cannot connect WebSocket: Room is not set");
         return;
@@ -126,12 +136,14 @@ export default {
     }
 
     function disconnectWebSocket() {
-      if (state.websocket) {
+      if (state.websocket && state.websocket.readyState === WebSocket.OPEN) {
         state.websocket.close();
+        console.log("WebSocket is safely closed.");
       }
     }
+    */
 
-    async function updateIconColor(username) {
+    /*async function updateIconColor(username) {
       try {
         const response = await axios.get(
           `${process.env.VUE_APP_BASE_URL}get_icon_color/`,
@@ -146,7 +158,7 @@ export default {
         console.error(`Error fetching icon color for ${username}:`, error);
       }
     }
-
+*/
     function getIconColor(username) {
       return iconColors[username] || "#000000";
     }
@@ -172,14 +184,7 @@ export default {
       if (!content || content.trim() === "") {
         return;
       }
-      if (state.websocket && state.websocket.readyState === WebSocket.OPEN) {
-        state.websocket.send(
-          JSON.stringify({
-            message: content,
-            username: currentUser.value.username,
-          })
-        );
-      }
+      store.dispatch("sendMessage", content);
     }
 
     return {

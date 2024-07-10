@@ -44,13 +44,12 @@ export default {
   },
   async mounted() {
     try {
-      const csrfToken = this.getCookie("csrftoken");
-      await this.createDefaultRoom(csrfToken);
       await this.$store.dispatch("fetchCurrentUser");
-
       if (this.currentUser) {
         console.log("Current user:", this.currentUser);
         await this.$store.dispatch("fetchIconColor");
+        const csrfToken = this.getCookie("csrftoken");
+        await this.createDefaultRoom(csrfToken);
       } else {
         console.error("Current user is null");
         // ここでログインページにリダイレクトするなどの処理を行う
