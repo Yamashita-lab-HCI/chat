@@ -39,8 +39,16 @@
 <script>
 import { Return32 } from "@carbon/icons-vue";
 import CommandPalette from "./CommandPalette.vue";
-import { mapState } from "vuex";
-import { reactive, toRefs, watch, onMounted, onBeforeUnmount, ref } from "vue";
+// import { mapState } from "vuex";
+import {
+  reactive,
+  toRefs,
+  watch,
+  onMounted,
+  onBeforeUnmount,
+  computed,
+} from "vue";
+import { useStore } from "vuex";
 import axios from "axios";
 
 export default {
@@ -52,42 +60,49 @@ export default {
   props: {
     roomName: String,
   },
-  setup(props, context) {
-    // const store = useStore();
+  setup() {
+    const store = useStore();
     const state = reactive({
-      showQuoteButton: ref({}),
+      showQuoteButton: {},
       quotedMessage: "",
-      isAuthenticated: false,
       messages: [],
       websocket: null,
     });
     const iconColors = reactive({});
 
-    const { isAuthenticated, currentUser } = mapState({
-      isAuthenticated: (state) => state.isLoggedIn,
-      currentUser: (state) => state.currentUser,
-    });
+    const isAuthenticated = computed(() => store.state.isLoggedIn);
+    const currentUser = computed(() => store.state.currentUser);
+    const currentRoom = computed(() => store.state.currentRoom);
 
     onMounted(() => {
-      connectWebSocket();
+      if (currentRoom.value) {
+        connectWebSocket();
+      }
     });
 
     onBeforeUnmount(() => {
       disconnectWebSocket();
     });
 
-    watch(
-      () => props.roomName,
-      () => {
+    watch(currentRoom, (newRoom) => {
+      if (newRoom) {
         disconnectWebSocket();
         connectWebSocket();
       }
-    );
+    });
 
     function connectWebSocket() {
-      state.websocket = new WebSocket(
-        `ws://localhost:8000/ws/chat/${props.roomName}/`
-      );
+      if (!currentRoom.value) {
+        console.error("Cannot connect WebSocket: Room is not set");
+        return;
+      }
+
+      const wsUrl =
+        `${process.env.VUE_APP_WS_URL}/ws/chat/${currentRoom.value}/`.replace(
+          /\/\//g,
+          "/"
+        );
+      state.websocket = new WebSocket(wsUrl);
 
       state.websocket.onopen = () => {
         console.log("WebSocket connected");
@@ -119,7 +134,7 @@ export default {
     async function updateIconColor(username) {
       try {
         const response = await axios.get(
-          process.env.VUE_APP_BASE_URL + "get_icon_color/",
+          `${process.env.VUE_APP_BASE_URL}get_icon_color/`,
           {
             params: { username: username },
           }
@@ -146,7 +161,6 @@ export default {
 
     function quoteMessage(messageText, id) {
       state.quotedMessage = messageText;
-      context.emit("quote", messageText);
       state.showQuoteButton[id] = false;
     }
 
@@ -162,7 +176,7 @@ export default {
         state.websocket.send(
           JSON.stringify({
             message: content,
-            username: currentUser.username,
+            username: currentUser.value.username,
           })
         );
       }

@@ -33,7 +33,6 @@ import axios from "axios";
 
 export default {
   name: "HomePage",
-  // props: ["id"],
   components: {
     MessageList,
     PromptDisplay,
@@ -43,37 +42,22 @@ export default {
       inputMessage: "",
     };
   },
-  mounted() {
-    const csrfToken = this.getCookie("csrftoken");
-    axios
-      .post(
-        process.env.VUE_APP_BASE_URL + "create_default_room/",
-        {
-          room_name: "HomePage",
-          room_id: 0,
-        },
-        {
-          headers: {
-            "X-CSRFToken": csrfToken.value,
-          },
-        }
-      )
-      .then((response) => {
-        console.log(response.data);
-        this.$store.commit("setCurrentRoom", 0);
-        this.$store.dispatch("fetchMessages");
-        this.$store.dispatch("fetchCurrentUser").then((currentUser) => {
-          console.log("Current user:", currentUser);
-          if (currentUser) {
-            this.$store.dispatch("fetchIconColor");
-          } else {
-            console.error("Current user is null");
-          }
-        });
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+  async mounted() {
+    try {
+      const csrfToken = this.getCookie("csrftoken");
+      await this.createDefaultRoom(csrfToken);
+      await this.$store.dispatch("fetchCurrentUser");
+
+      if (this.currentUser) {
+        console.log("Current user:", this.currentUser);
+        await this.$store.dispatch("fetchIconColor");
+      } else {
+        console.error("Current user is null");
+        // ここでログインページにリダイレクトするなどの処理を行う
+      }
+    } catch (error) {
+      console.error("Error in mounted hook:", error);
+    }
   },
   computed: {
     messages() {
@@ -83,7 +67,7 @@ export default {
       return this.$store.state.currentRoom;
     },
     currentUser() {
-      return this.$strore.state.currentUser;
+      return this.$store.state.currentUser;
     },
   },
 
@@ -91,6 +75,27 @@ export default {
     this.$store.dispatch("fetchIconColor");
   }, */
   methods: {
+    async createDefaultRoom(csrfToken) {
+      try {
+        const response = await axios.post(
+          `${process.env.VUE_APP_BASE_URL}create_default_room/`,
+          {
+            room_name: "HomePage",
+            room_id: 0,
+          },
+          {
+            headers: {
+              "X-CSRFToken": csrfToken,
+            },
+          }
+        );
+        console.log(response.data);
+        this.$store.commit("setCurrentRoom", 0);
+        await this.$store.dispatch("fetchMessages");
+      } catch (error) {
+        console.error("Error creating default room:", error);
+      }
+    },
     getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -105,15 +110,19 @@ export default {
       }
       return cookieValue;
     },
-    addMessage() {
+    async addMessage() {
       if (!this.currentRoom) {
         console.error("currentRoom is not set");
         return;
       }
       console.log(this.inputMessage);
       const messageData = this.inputMessage;
-      this.$store.dispatch("addMessage", messageData);
-      this.inputMessage = "";
+      try {
+        await this.$store.dispatch("addMessage", messageData);
+        this.inputMessage = "";
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
     },
     quoteMessage(message) {
       this.inputMessage = `> ${message}\n`;

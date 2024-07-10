@@ -38,7 +38,7 @@ const store = createStore({
       state.messages = messages;
     },
     addMessage(state, message) {
-      state.messages.unshift(message);
+      state.messages.unshift(message); // 新しいメッセージを配列の先頭に追加
     },
     setSocket(state, socket) {
       state.socket = socket;
@@ -136,25 +136,38 @@ const store = createStore({
           console.error("Error fetching messages:", error);
         });
     },
-    initWebSocket({ commit, state, dispatch }) {
+    initWebSocket({ state, commit }) {
+      if (!state.currentUser) {
+        console.error("Cannot initialize WebSocket: User not authenticated");
+        return;
+      }
       if (state.currentRoom === null) {
-        console.error("currentRoom is not set");
+        console.error("Cannot initialize WebSocket: Room not selected");
         return;
       }
 
-      const socket = new WebSocket(
-        `${process.env.VUE_APP_WS_URL}/ws/chat/${state.currentRoom}/`
-      );
+      if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+        state.socket.close();
+      }
+
+      const wsUrl = `${process.env.VUE_APP_WS_URL}ws/chat/${state.currentRoom}/`;
+      console.log("Connecting to WebSocket:", wsUrl);
+
+      const socket = new WebSocket(wsUrl);
 
       socket.onopen = () => {
-        console.log("WebSocket connected");
+        console.log("WebSocket connected successfully");
       };
 
       socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === "chat_message") {
-          commit("addMessage", data.message);
-          dispatch("fetchIconColor", data.message.user__username);
+        console.log("WebSocket message received:", event.data);
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "chat_message") {
+            commit("addMessage", data.message);
+          }
+        } catch (error) {
+          console.error("Error processing WebSocket message:", error);
         }
       };
 
@@ -162,28 +175,38 @@ const store = createStore({
         console.error("WebSocket error:", error);
       };
 
-      socket.onclose = () => {
-        console.log("WebSocket disconnected");
-        setTimeout(() => dispatch("initWebSocket"), 5000);
+      socket.onclose = (event) => {
+        console.log(
+          "WebSocket closed. Code:",
+          event.code,
+          "Reason:",
+          event.reason
+        );
+        setTimeout(() => {
+          console.log("Attempting to reconnect...");
+          this.dispatch("initWebSocket");
+        }, 5000);
       };
-
       commit("setSocket", socket);
     },
-    sendMessage({ state }, messageData) {
-      return new Promise((resolve, reject) => {
-        if (state.socket && state.socket.readyState === WebSocket.OPEN) {
-          const message = {
-            message: messageData,
-            username: state.currentUser.username,
-            room_id: state.currentRoom,
-          };
-          state.socket.send(JSON.stringify(message));
-          resolve();
-        } else {
-          console.error("WebSocket is not open");
-          reject("WebSocket is not open");
-        }
-      });
+    sendMessage({ state, commit }, messageData) {
+      if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+        const message = {
+          type: "chat_message",
+          message: messageData,
+          username: state.currentUser.username,
+          room: state.currentRoom,
+        };
+        state.socket.send(JSON.stringify(message));
+        // ローカルでもメッセージを追加
+        commit("addMessage", {
+          text: messageData,
+          user__username: state.currentUser.username,
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        console.error("WebSocket is not open. Unable to send message.");
+      }
     },
     logIn({ commit }) {
       commit("setLoggedIn", true);

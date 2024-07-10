@@ -25,6 +25,7 @@
 <script>
 import MessageList from "@/components/MessageList.vue";
 import PromptDisplay from "@/components/PromptDisplay.vue";
+import { mapState, mapActions } from "vuex";
 
 export default {
   name: "RoomPage",
@@ -37,31 +38,35 @@ export default {
       inputMessage: "",
     };
   },
+  computed: {
+    ...mapState(["messages", "currentRoom", "currentUser"]),
+  },
   watch: {
     "$route.params.id": {
       immediate: true,
-      async handler(newId) {
-        await this.$store.commit("setCurrentRoom", newId);
-        this.$store.dispatch("fetchMessages", newId);
-        this.$store.dispatch("fetchCurrentUser", newId);
+      handler(newId) {
+        this.initializeRoom(newId);
       },
     },
   },
-  computed: {
-    messages() {
-      return this.$store.state.messages;
-    },
-    currentRoom() {
-      return this.$store.state.currentRoom;
-    },
-  },
-  created() {
-    this.$store.dispatch("fetchIconColor");
-  },
   methods: {
+    ...mapActions([
+      "fetchMessages",
+      "fetchCurrentUser",
+      "initWebSocket",
+      "addMessage",
+    ]),
+    async initializeRoom(roomId) {
+      await this.$store.commit("setCurrentRoom", roomId);
+      await this.fetchMessages(roomId);
+      await this.fetchCurrentUser();
+      this.initWebSocket();
+    },
     addMessage() {
-      this.$store.dispatch("addMessage", this.inputMessage);
-      this.inputMessage = "";
+      if (this.inputMessage.trim()) {
+        this.addMessage(this.inputMessage);
+        this.inputMessage = "";
+      }
     },
     quoteMessage(message) {
       this.inputMessage = `> ${message}\n`;
@@ -70,9 +75,20 @@ export default {
       this.$store.commit("SET_MESSAGES", newMessages);
     },
   },
+  created() {
+    this.$store.dispatch("fetchIconColor");
+  },
+  mounted() {
+    this.initializeRoom(this.$route.params.id);
+  },
+  beforeUnmount() {
+    // WebSocket接続をクローズ
+    if (this.$store.state.socket) {
+      this.$store.state.socket.close();
+    }
+  },
 };
 </script>
-
 <style>
 .home {
   display: flex;

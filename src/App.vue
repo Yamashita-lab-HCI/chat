@@ -74,6 +74,7 @@ export default {
       "fetchAuthentication",
       "fetchRooms",
       "fetchMessages",
+      "initWebSocket",
     ]),
     goToHome() {
       this.$router.push("/home").then(() => {
@@ -85,11 +86,13 @@ export default {
     },
     selectRoom(room) {
       this.$router.push(`/room/${room.id}`);
-      // this.fetchMessages();
+      this.$store.commit("setCurrentRoom", room.id);
+      this.initWebSocket(); // WebSocket接続を初期化
+      this.fetchMessages();
     },
     logout() {
       const csrfToken = this.getCookie("csrftoken");
-      console.log("CSRF Token:", csrfToken); // トークンの確認
+      console.log("CSRF Token:", csrfToken);
       axios
         .post(
           process.env.VUE_APP_BASE_URL + "logout/",
@@ -101,6 +104,9 @@ export default {
           }
         )
         .then(() => {
+          if (this.$store.state.socket) {
+            this.$store.state.socket.close();
+          }
           this.logOut();
           this.$router.push("/login");
         })
@@ -144,6 +150,7 @@ export default {
             this.addRoom({ name: roomName, id: roomId });
             console.log("response is" + response.data);
             this.$store.commit("setCurrentRoom", roomId);
+            this.initWebSocket();
             this.$router.push(`/room/${roomId}`);
           })
           .catch((error) => {
