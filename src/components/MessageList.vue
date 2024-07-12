@@ -39,7 +39,7 @@
 <script>
 import { Return32 } from "@carbon/icons-vue";
 import CommandPalette from "./CommandPalette.vue";
-// import { mapState } from "vuex";
+import { mapState, useStore } from "vuex";
 import {
   reactive,
   toRefs,
@@ -48,7 +48,6 @@ import {
   onBeforeUnmount,
   computed,
 } from "vue";
-import { useStore } from "vuex";
 
 export default {
   name: "MessageList",
@@ -59,12 +58,14 @@ export default {
   props: {
     roomName: String,
   },
+  computed: {
+    ...mapState(["messages"]),
+  },
   setup() {
     const store = useStore();
     const state = reactive({
       showQuoteButton: {},
       quotedMessage: "",
-      messages: [],
     });
     const iconColors = reactive({});
 
@@ -100,6 +101,20 @@ export default {
         store.dispatch("initWebSocket");
       }
     });
+
+    watch(
+      () => store.state.messages,
+      (newMessages, oldMessages) => {
+        // ここでUIの更新処理を行う
+        // 例: 新しいメッセージが追加されたことをユーザーに通知する
+        console.log(
+          "Messages updated",
+          newMessages.length - oldMessages.length,
+          "new messages added"
+        );
+      },
+      { deep: true }
+    );
 
     /*function connectWebSocket() {
       if (!currentRoom.value) {

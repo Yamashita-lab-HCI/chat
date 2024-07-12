@@ -13,7 +13,6 @@ const store = createStore({
       isPasswordValid: false,
       isLoggedIn: false,
       socket: null,
-      showQuoteButton: {},
       roomId: null,
       iconColor: null,
     };
@@ -35,10 +34,10 @@ const store = createStore({
       state.currentRoom = room;
     },
     setMessages(state, messages) {
-      state.messages = messages;
+      state.messages = [...state.messages, ...messages];
     },
     addMessage(state, message) {
-      state.messages.unshift(message); // 新しいメッセージを配列の先頭に追加
+      state.messages.push(message); // 新しいメッセージを配列の最後に追加
     },
     setSocket(state, socket) {
       state.socket = socket;
@@ -164,7 +163,7 @@ const store = createStore({
         try {
           const data = JSON.parse(event.data);
           if (data.type === "chat_message") {
-            commit("addMessage", data.message);
+            store.dispatch("addMessage", data.message);
           }
         } catch (error) {
           console.error("Error processing WebSocket message:", error);
@@ -186,7 +185,7 @@ const store = createStore({
         /*
         setTimeout(() => {
           console.log("Attempting to reconnect...");
-          this.dispatch("initWebSocket");
+          store.dispatch("initWebSocket");
         }, 5000);
         */
       };
