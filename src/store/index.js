@@ -15,6 +15,8 @@ const store = createStore({
       socket: null,
       roomId: null,
       iconColor: null,
+      chatSocket: null,
+      roomListSocket: null,
     };
   },
   mutations: {
@@ -36,14 +38,17 @@ const store = createStore({
     setMessages(state, messages) {
       state.messages = [...state.messages, ...messages];
     },
-    addMessage(state, message) {
-      state.messages.push(message); // 新しいメッセージを配列の最後に追加
-    },
     setSocket(state, socket) {
       state.socket = socket;
     },
+    setRoomListSocket(state, socket) {
+      state.roomListSocket = socket;
+    },
     addRoom(state, room) {
       state.rooms = [...state.rooms, room];
+    },
+    addMessage(state, message) {
+      state.messages.push(message);
     },
     updateUsernameValidation(state, isValid) {
       state.isUsernameValid = isValid;
@@ -53,6 +58,18 @@ const store = createStore({
     },
     SET_ROOM_ID(state, roomId) {
       state.roomId = roomId;
+    },
+    SET_CHAT_SOCKET(state, socket) {
+      if (state.chatSocket) {
+        state.chatSocket.close();
+      }
+      state.chatSocket = socket;
+    },
+    SET_ROOM_LIST_SOCKET(state, socket) {
+      if (state.roomListSocket) {
+        state.roomListSocket.close();
+      }
+      state.roomListSocket = socket;
     },
   },
   actions: {
@@ -135,6 +152,34 @@ const store = createStore({
           console.error("Error fetching messages:", error);
         });
     },
+
+    initRoomListWebSocket({ commit, dispatch }) {
+      const wsUrl = `${process.env.VUE_APP_WS_URL}ws/room_list/`;
+      const socket = new WebSocket(wsUrl);
+
+      socket.onopen = () => {
+        console.log("Room List WebSocket connected");
+      };
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "room_list_update") {
+          dispatch("updateRoomList", data.rooms);
+        }
+      };
+
+      socket.onclose = () => {
+        console.log("Room List WebSocket disconnected");
+        setTimeout(() => dispatch("initRoomListWebSocket"), 3000);
+      };
+
+      commit("SET_ROOM_LIST_SOCKET", socket);
+    },
+
+    updateRoomList({ commit }, rooms) {
+      commit("setRooms", rooms);
+    },
+
     initWebSocket({ state, commit }) {
       if (!state.currentUser) {
         console.error("Cannot initialize WebSocket: User not authenticated");
@@ -190,6 +235,9 @@ const store = createStore({
         */
       };
       commit("setSocket", socket);
+    },
+    addMessage({ commit }, message) {
+      commit("addMessage", message);
     },
     sendMessage({ state, commit }, messageData) {
       if (state.socket && state.socket.readyState === WebSocket.OPEN) {
