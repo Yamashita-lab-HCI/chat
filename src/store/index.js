@@ -36,7 +36,7 @@ const store = createStore({
       state.currentRoom = room;
     },
     setMessages(state, messages) {
-      state.messages = [...state.messages, ...messages];
+      state.messages = messages;
     },
     setSocket(state, socket) {
       state.socket = socket;
@@ -48,7 +48,9 @@ const store = createStore({
       state.rooms = [...state.rooms, room];
     },
     addMessage(state, message) {
-      state.messages.push(message);
+      if (!state.messages.some((m) => m.id === message.id)) {
+        state.messages.push(message);
+      }
     },
     updateUsernameValidation(state, isValid) {
       state.isUsernameValid = isValid;
@@ -152,7 +154,6 @@ const store = createStore({
           console.error("Error fetching messages:", error);
         });
     },
-
     initRoomListWebSocket({ commit, dispatch }) {
       const wsUrl = `${process.env.VUE_APP_WS_URL}ws/room_list/`;
       const socket = new WebSocket(wsUrl);
@@ -178,6 +179,13 @@ const store = createStore({
 
     updateRoomList({ commit }, rooms) {
       commit("setRooms", rooms);
+    },
+
+    closeWebSocket({ state, commit }) {
+      if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+        state.socket.close();
+      }
+      commit("setSocket", null);
     },
 
     initWebSocket({ state, commit }) {
@@ -236,10 +244,27 @@ const store = createStore({
       };
       commit("setSocket", socket);
     },
+    switchRoom({ commit, state }, newRoomId) {
+      if (state.chatSocket) {
+        state.chatSocket.close();
+        commit("SET_CHAT_SOCKET", null);
+      }
+
+      if (state.roomListSocket) {
+        state.roomListSocket.close();
+        commit("SET_ROOM_LIST_SOCKET", null);
+      }
+
+      commit("SET_ROOM_ID", newRoomId);
+
+      store.dispatch("initChatWebSocket", newRoomId);
+
+      store.dispatch("initRoomListWebSocket");
+    },
     addMessage({ commit }, message) {
       commit("addMessage", message);
     },
-    sendMessage({ state, commit }, messageData) {
+    sendMessage({ state }, messageData) {
       if (state.socket && state.socket.readyState === WebSocket.OPEN) {
         const message = {
           type: "chat_message",
@@ -248,12 +273,6 @@ const store = createStore({
           room: state.currentRoom,
         };
         state.socket.send(JSON.stringify(message));
-        // ローカルでもメッセージを追加
-        commit("addMessage", {
-          text: messageData,
-          user__username: state.currentUser.username,
-          timestamp: new Date().toISOString(),
-        });
       } else {
         console.error("WebSocket is not open. Unable to send message.");
       }

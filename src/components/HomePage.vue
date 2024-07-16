@@ -52,12 +52,12 @@ export default {
         await this.createDefaultRoom(csrfToken);
       } else {
         console.error("Current user is null");
-        // ここでログインページにリダイレクトするなどの処理を行う
       }
     } catch (error) {
       console.error("Error in mounted hook:", error);
     }
   },
+
   computed: {
     messages() {
       return this.$store.state.messages;
@@ -74,6 +74,49 @@ export default {
     this.$store.dispatch("fetchIconColor");
   }, */
   methods: {
+    initWebSocket() {
+      // WebSocketのURLを指定します。例: ws://localhost:3000
+      const wsUrl = "YOUR_WEBSOCKET_ENDPOINT";
+      this.socket = new WebSocket(wsUrl);
+
+      // WebSocket接続が開かれた時のイベントハンドラ
+      this.socket.onopen = () => {
+        console.log("WebSocket connection opened");
+        // 必要に応じてサーバーにメッセージを送信
+        // this.socket.send("Hello Server!");
+      };
+
+      // メッセージを受信した時のイベントハンドラ
+      this.socket.onmessage = (event) => {
+        console.log("Message from server ", event.data);
+        const receivedMessage = JSON.parse(event.data);
+        // 受信したメッセージを処理
+        this.updateMessages(receivedMessage);
+      };
+
+      // WebSocket接続が閉じられた時のイベントハンドラ
+      this.socket.onclose = () => {
+        console.log("WebSocket connection closed");
+      };
+
+      // エラーが発生した時のイベントハンドラ
+      this.socket.onerror = (error) => {
+        console.error("WebSocket error: ", error);
+      };
+    },
+    beforeUnmount() {
+      // WebSocket接続をクローズ
+      if (this.socket) {
+        this.socket.close();
+      }
+    },
+    sendMessage() {
+      if (this.inputMessage.trim() && this.socket) {
+        // メッセージをサーバーに送信
+        this.socket.send(JSON.stringify({ message: this.inputMessage }));
+        this.inputMessage = ""; // 入力フィールドをクリア
+      }
+    },
     async createDefaultRoom(csrfToken) {
       try {
         const response = await axios.post(

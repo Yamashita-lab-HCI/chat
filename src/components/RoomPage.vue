@@ -55,14 +55,17 @@ export default {
       "fetchCurrentUser",
       "initWebSocket",
       "addMessage",
+      "closeWebSocket",
     ]),
     async initializeRoom(roomId) {
+      await this.closeWebSocket();
+      this.$store.commit("setMessages", []);
       await this.$store.commit("setCurrentRoom", roomId);
       await this.fetchMessages(roomId);
       await this.fetchCurrentUser();
       this.initWebSocket();
     },
-    addMessage() {
+    sendMessage() {
       if (this.inputMessage.trim()) {
         this.addMessage(this.inputMessage);
         this.inputMessage = "";
@@ -80,12 +83,10 @@ export default {
   },
   mounted() {
     this.initializeRoom(this.$route.params.id);
+    this.initWebSocket();
   },
   beforeUnmount() {
-    // WebSocket接続をクローズ
-    if (this.$store.state.socket) {
-      this.$store.state.socket.close();
-    }
+    this.closeWebSocket();
   },
 };
 </script>
