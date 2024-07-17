@@ -70,9 +70,9 @@ export default {
     },
   },
 
-  /*created() {
+  created() {
     this.$store.dispatch("fetchIconColor");
-  }, */
+  },
   methods: {
     initWebSocket() {
       // WebSocketのURLを指定します。例: ws://localhost:3000

@@ -14,7 +14,7 @@ const store = createStore({
       isLoggedIn: false,
       socket: null,
       roomId: null,
-      iconColor: null,
+      iconColor: "primary",
       chatSocket: null,
       roomListSocket: null,
     };

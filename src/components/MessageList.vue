@@ -40,6 +40,7 @@
 import { Return32 } from "@carbon/icons-vue";
 import CommandPalette from "./CommandPalette.vue";
 import { mapState, useStore } from "vuex";
+import axios from "axios";
 import {
   reactive,
   toRefs,
@@ -158,7 +159,7 @@ export default {
     }
     */
 
-    /*async function updateIconColor(username) {
+    async function updateIconColor(username) {
       try {
         const response = await axios.get(
           `${process.env.VUE_APP_BASE_URL}get_icon_color/`,
@@ -173,7 +174,19 @@ export default {
         console.error(`Error fetching icon color for ${username}:`, error);
       }
     }
-*/
+
+    watch(
+      () => store.state.messages,
+      async (newMessages) => {
+        for (const msg of newMessages) {
+          if (!iconColors[msg.user__username]) {
+            await updateIconColor(msg.user__username);
+          }
+        }
+      },
+      { deep: true }
+    );
+
     function getIconColor(username) {
       return iconColors[username] || "#000000";
     }

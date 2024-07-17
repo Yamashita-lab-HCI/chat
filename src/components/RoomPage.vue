@@ -39,7 +39,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(["messages", "currentRoom", "currentUser"]),
+    ...mapState(["messages", "currentRoom", "currentUser", "iconColor"]),
   },
   watch: {
     "$route.params.id": {
