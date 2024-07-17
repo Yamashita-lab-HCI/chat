@@ -72,7 +72,7 @@ export default {
         )
         .then((response) => {
           if (response.data && response.data.status == "success") {
-            store.commit("setCurrentUser", { username: username.value });
+            store.commit("setCurrentUser", username.value);
             store.dispatch("logIn");
             alert("Login Success!");
             router.push("/home").then(() => {

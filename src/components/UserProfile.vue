@@ -31,7 +31,7 @@
 <script>
 import { mapActions, useStore } from "vuex";
 import { useColors } from "vuestic-ui";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 
 export default {
@@ -40,6 +40,16 @@ export default {
     const store = useStore();
     const iconColor = ref("primary");
     const username = store.state.currentUser.username;
+    const ws = ref(null);
+    const initializeWebSocket = () => {
+      ws.value = new WebSocket(`${process.env.VUE_APP_WS_URL}ws/room_list/`);
+      ws.value.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "icon_color_change") {
+          iconColor.value = data.color;
+        }
+      };
+    };
     const initializeIconColor = async () => {
       try {
         const response = await axios.get(
@@ -74,6 +84,7 @@ export default {
     ]);
 
     const { getColor } = useColors();
+    const cssColor = computed(() => getColor(iconColor.value));
 
     const changeIconColor = (colorName) => {
       const color = getColor(colorName);
@@ -81,15 +92,24 @@ export default {
         console.error(`Color "${colorName}" not found in Vuestic config.`);
         return;
       }
-      store
-        .dispatch("updateIconColor", color)
-        .then(() => {
-          iconColor.value = color;
-        })
-        .catch((error) => {
-          console.error("Error updating icon color:", error);
-        });
+      if (ws.value) {
+        ws.value.send(
+          JSON.stringify({ type: "icon_color_change", color: color })
+        );
+      }
+      iconColor.value = color;
+      store.dispatch("updateIconColor", color);
     };
+
+    onMounted(() => {
+      initializeWebSocket();
+    });
+
+    onUnmounted(() => {
+      if (ws.value) {
+        ws.value.close();
+      }
+    });
 
     const fetchIconColor = async () => {
       const fetchedColor = await store.dispatch("fetchIconColor");
@@ -99,7 +119,6 @@ export default {
       }
     };
     fetchIconColor();
-    const cssColor = computed(() => getColor(iconColor.value));
 
     return {
       iconColor,
@@ -110,6 +129,9 @@ export default {
   },
   methods: {
     ...mapActions(["updateIconColor"]),
+    updateIconColor(color) {
+      this.changeIconColor(color);
+    },
   },
 };
 </script>
