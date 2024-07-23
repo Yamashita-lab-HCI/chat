@@ -1,9 +1,5 @@
-// import Vue from "vue";
 import { createStore } from "vuex";
-// import { getCookie } from ".//../../utils.js";
-import axios from "axios"; // Axios をインポート
-// import dummyData from "@/dummyData";
-// import { stringify } from "flatted";
+import axios from "axios";
 
 const store = createStore({
   state() {
@@ -16,10 +12,11 @@ const store = createStore({
       isUsernameValid: false,
       isPasswordValid: false,
       isLoggedIn: false,
-      socket: new WebSocket(process.env.VUE_APP_WS_URL),
-      showQuoteButton: {},
+      socket: null,
       roomId: null,
-      iconColor: null,
+      iconColor: "primary",
+      chatSocket: null,
+      roomListSocket: null,
     };
   },
   mutations: {
@@ -30,7 +27,7 @@ const store = createStore({
       state.rooms = rooms;
     },
     setLoggedIn(state, status) {
-      state.isLoggedIn = status; // ログイン状態を更新
+      state.isLoggedIn = status;
     },
     setCurrentUser(state, user) {
       state.currentUser = user;
@@ -38,22 +35,22 @@ const store = createStore({
     setCurrentRoom(state, room) {
       state.currentRoom = room;
     },
-    updateMessage(state, newMessage) {
-      const transformedMessage = {
-        user__username: newMessage.username,
-        text: newMessage.message,
-      };
-      state.messages = [...state.messages, transformedMessage];
-      console.log("Updated messages:", state.messages);
-    },
     setMessages(state, messages) {
       state.messages = messages;
     },
     setSocket(state, socket) {
       state.socket = socket;
     },
+    setRoomListSocket(state, socket) {
+      state.roomListSocket = socket;
+    },
     addRoom(state, room) {
       state.rooms = [...state.rooms, room];
+    },
+    addMessage(state, message) {
+      if (!state.messages.some((m) => m.id === message.id)) {
+        state.messages.push(message);
+      }
     },
     updateUsernameValidation(state, isValid) {
       state.isUsernameValid = isValid;
@@ -64,14 +61,24 @@ const store = createStore({
     SET_ROOM_ID(state, roomId) {
       state.roomId = roomId;
     },
+    SET_CHAT_SOCKET(state, socket) {
+      if (state.chatSocket) {
+        state.chatSocket.close();
+      }
+      state.chatSocket = socket;
+    },
+    SET_ROOM_LIST_SOCKET(state, socket) {
+      if (state.roomListSocket) {
+        state.roomListSocket.close();
+      }
+      state.roomListSocket = socket;
+    },
   },
   actions: {
     fetchIconColor({ commit, state }) {
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "get_icon_color/", {
-          params: {
-            username: state.currentUser.username,
-          },
+          params: { username: state.currentUser.username },
         })
         .then((response) => {
           commit("setIconColor", response.data.color);
@@ -83,9 +90,7 @@ const store = createStore({
     },
     updateIconColor({ commit, state }, color) {
       const username = state.currentUser.username;
-      console.log(username);
-      console.log(color);
-      axios
+      return axios
         .post(process.env.VUE_APP_BASE_URL + "update_icon_color/", {
           username: username,
           color: color,
@@ -98,10 +103,9 @@ const store = createStore({
         });
     },
     fetchRooms({ commit }) {
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "room/")
         .then((response) => {
-          console.log(response.data);
           const rooms = response.data.map((room) => ({
             id: room.id,
             name: room.name,
@@ -113,22 +117,20 @@ const store = createStore({
         });
     },
     fetchAuthentication({ commit }) {
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "check_login_status/")
         .then((response) => {
           commit("setLoggedIn", response.data.isLoggedIn);
         })
         .catch((error) => {
           console.error("Error fetching authentication status:", error);
-          commit("setLoggedIn", false); // エラーが発生した場合、ログイン状態を false に設定
+          commit("setLoggedIn", false);
         });
     },
     fetchCurrentUser({ commit }) {
-      console.log("fetchMessages action called");
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "get_current_user/")
         .then((response) => {
-          console.log("Current user:", response.data);
           commit("setCurrentUser", response.data);
           localStorage.setItem("username", response.data.username);
         })
@@ -137,16 +139,13 @@ const store = createStore({
         });
     },
     fetchMessages({ state, commit }) {
-      console.log(state.currentRoom);
       if (state.currentRoom === null) {
         console.error("currentRoom is not set");
         return Promise.reject("currentRoom is not set");
       }
-      axios
+      return axios
         .get(process.env.VUE_APP_BASE_URL + "messages/", {
-          params: {
-            room_id: state.currentRoom,
-          },
+          params: { room_id: state.currentRoom },
         })
         .then((response) => {
           commit("setMessages", response.data);
@@ -155,45 +154,128 @@ const store = createStore({
           console.error("Error fetching messages:", error);
         });
     },
-    addMessage({ commit, state }, messageData) {
-      return new Promise((resolve, reject) => {
-        console.log("messageData:", messageData);
-        const username = localStorage.getItem("username");
-        if (!username) {
-          console.error("Username is not set");
-          reject("Username is not set");
-          return;
+    initRoomListWebSocket({ commit, dispatch }) {
+      const wsUrl = `${process.env.VUE_APP_WS_URL}ws/room_list/`;
+      const socket = new WebSocket(wsUrl);
+
+      socket.onopen = () => {
+        console.log("Room List WebSocket connected");
+      };
+
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "room_list_update") {
+          dispatch("updateRoomList", data.rooms);
         }
-        if (!messageData) {
-          console.error("Message is empty");
-          reject("Message is empty");
-          return;
+      };
+
+      socket.onclose = () => {
+        console.log("Room List WebSocket disconnected");
+        setTimeout(() => dispatch("initRoomListWebSocket"), 3000);
+      };
+
+      commit("SET_ROOM_LIST_SOCKET", socket);
+    },
+
+    updateRoomList({ commit }, rooms) {
+      commit("setRooms", rooms);
+    },
+
+    closeWebSocket({ state, commit }) {
+      if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+        state.socket.close();
+      }
+      commit("setSocket", null);
+    },
+
+    initWebSocket({ state, commit }) {
+      if (!state.currentUser) {
+        console.error("Cannot initialize WebSocket: User not authenticated");
+        return;
+      }
+      if (state.currentRoom === null) {
+        console.error("Cannot initialize WebSocket: Room not selected");
+        return;
+      }
+
+      if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+        state.socket.close();
+      }
+
+      const wsUrl = `${process.env.VUE_APP_WS_URL}ws/chat/${state.currentRoom}/`;
+      console.log("Connecting to WebSocket:", wsUrl);
+
+      const socket = new WebSocket(wsUrl);
+
+      socket.onopen = () => {
+        console.log("WebSocket connected successfully");
+      };
+
+      socket.onmessage = (event) => {
+        console.log("WebSocket message received:", event.data);
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "chat_message") {
+            store.dispatch("addMessage", data.message);
+          }
+        } catch (error) {
+          console.error("Error processing WebSocket message:", error);
         }
-        const newMessage = {
-          username: username,
+      };
+
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+
+      socket.onclose = (event) => {
+        console.log(
+          "WebSocket closed. Code:",
+          event.code,
+          "Reason:",
+          event.reason
+        );
+        commit("setSocket", null);
+        /*
+        setTimeout(() => {
+          console.log("Attempting to reconnect...");
+          store.dispatch("initWebSocket");
+        }, 5000);
+        */
+      };
+      commit("setSocket", socket);
+    },
+    switchRoom({ commit, state }, newRoomId) {
+      if (state.chatSocket) {
+        state.chatSocket.close();
+        commit("SET_CHAT_SOCKET", null);
+      }
+
+      if (state.roomListSocket) {
+        state.roomListSocket.close();
+        commit("SET_ROOM_LIST_SOCKET", null);
+      }
+
+      commit("SET_ROOM_ID", newRoomId);
+
+      store.dispatch("initChatWebSocket", newRoomId);
+
+      store.dispatch("initRoomListWebSocket");
+    },
+    addMessage({ commit }, message) {
+      commit("addMessage", message);
+    },
+    sendMessage({ state }, messageData) {
+      if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+        const message = {
+          type: "chat_message",
           message: messageData,
-          room_id: state.currentRoom,
+          username: state.currentUser.username,
+          room: state.currentRoom,
         };
-        console.log("New message:", newMessage);
-        state.socket.send(JSON.stringify(newMessage));
-        axios
-          .post(process.env.VUE_APP_BASE_URL + "messages/", newMessage)
-          .then((response) => {
-            console.log("Message posted successfully");
-            const returnedMessage = response.data.new_message;
-            commit("updateMessage", returnedMessage);
-            if (!(returnedMessage.id in state.showQuoteButton)) {
-              state.showQuoteButton[returnedMessage.id] = false;
-            }
-            resolve(returnedMessage);
-          })
-          .catch((error) => {
-            console.error("Failed to post message:", error);
-            console.error("Detailed error:", error.response.data);
-            alert(`Error: ${error.response.data.message}`);
-            reject(error);
-          });
-      });
+        state.socket.send(JSON.stringify(message));
+      } else {
+        console.error("WebSocket is not open. Unable to send message.");
+      }
     },
     logIn({ commit }) {
       commit("setLoggedIn", true);
@@ -204,8 +286,9 @@ const store = createStore({
     addRoom({ commit }, room) {
       commit("addRoom", room);
     },
-    selectRoom({ commit }, room) {
+    selectRoom({ commit, dispatch }, room) {
       commit("setCurrentRoom", room);
+      dispatch("initWebSocket");
     },
     updateUsernameValidation({ commit }, isValid) {
       commit("updateUsernameValidation", isValid);
@@ -218,35 +301,5 @@ const store = createStore({
     },
   },
 });
-
-// WebSocketの接続が開始されたときにメッセージを取得
-store.state.socket.onopen = function () {
-  store.state.socket.send(
-    JSON.stringify({
-      type: "fetchMessages",
-    })
-  );
-};
-
-// 新しいメッセージがWebSocketを通じて受信されたときに、それをstateに追加
-store.state.socket.onmessage = function (event) {
-  console.log("WebSocket message received:", event.data);
-  let data;
-  if (event.data instanceof ArrayBuffer) {
-    const decoder = new TextDecoder("utf-8");
-    data = JSON.parse(decoder.decode(event.data));
-  } else {
-    data = JSON.parse(event.data);
-  }
-  if (
-    data.type === "message" &&
-    data.message &&
-    data.message.text &&
-    data.message.text.trim() !== ""
-  ) {
-    console.log("Received message data:", data.message);
-    store.commit("updateMessage", data.message);
-  }
-};
 
 export default store;
