@@ -2,12 +2,28 @@
   <div class="prompt-display">
     <h2>🧑 Ask ChatGPT!</h2>
     <div class="input-group">
-      <input
+      <textarea
         class="input"
         placeholder="Please type in your questions."
         v-model="state.prompt"
-      />
-      <button @click="askChatGPT" class="btn">Send</button>
+      ></textarea>
+    </div>
+    <div class="va-title">
+      Please click the button that best suits your purpose:
+    </div>
+    <div class="input-group">
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('translate')">
+        Translation
+      </VaButton>
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('decision')">
+        Decision
+      </VaButton>
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('opinion')">
+        Opinion
+      </VaButton>
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('keywords')">
+        Keyword
+      </VaButton>
     </div>
     <div class="response">
       <pre>{{ state.response }}</pre>
@@ -38,41 +54,62 @@ const http = axios.create({
 
 const store = useStore();
 
-async function askChatGPT() {
+async function askChatGPT(purpose) {
   if (!state.prompt.trim()) {
-    state.response = "⚠️ 質問を入力してください。";
+    state.response = "⚠️ Please enter your question.";
     return;
   }
+
+  let requestData = {
+    model: "gpt-3.5-turbo",
+    messages: [
+      { role: "user", content: generatePrompt(state.prompt, purpose) },
+    ],
+    max_tokens: 256,
+    temperature: 0.7,
+  };
 
   try {
     const result = await makeRequestWithRetry(
       "chat/completions",
-      {
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: state.prompt }],
-        max_tokens: 256,
-        temperature: 0.7,
-      },
+      requestData,
       3,
       2000
-    ); // 最大3回のリトライ、リトライ間隔2000ミリ秒
+    );
     state.response = result.data.choices[0].message.content;
 
-    // GPTからの応答を取得した後、その質問と回答をバックエンドに送信
     await axios.post(process.env.VUE_APP_BASE_URL + "record/", {
       username: store.state.currentUser,
       question: state.prompt,
       answer: state.response,
     });
   } catch (error) {
-    console.error("ChatGPTからの応答の取得に失敗しました:", error);
+    console.error("Failed to get response from ChatGPT:", error);
     if (error.response && error.response.data && error.response.data.error) {
-      state.response = `⚠️ エラーが発生しました: ${error.response.data.error.message}. 詳細はOpenAIのドキュメントを参照してください。`;
+      state.response = `⚠️ An error occurred: ${error.response.data.error.message}. Please refer to OpenAI's documentation for details.`;
     } else {
-      state.response =
-        "⚠️ 不明なエラーが発生しました。サポートに連絡してください。";
+      state.response = "⚠️ An unknown error occurred. Please contact support.";
     }
   }
+}
+
+function generatePrompt(input, purpose) {
+  let basePrompt = "";
+  switch (purpose) {
+    case "translate":
+      basePrompt = `Please translate the following word or phrase into the specified language (if no language is specified, translate into English): ${input}`;
+      break;
+    case "decision":
+      basePrompt = `Please provide decision-making support based on the following information (if no language is specified, respond in English): ${input}`;
+      break;
+    case "opinion":
+      basePrompt = `Please provide your opinion on the following topic (if no language is specified, respond in English): ${input}`;
+      break;
+    case "keywords":
+      basePrompt = `Please provide ideas or suggestions related to the following keyword (if no language is specified, respond in English): ${input}`;
+      break;
+  }
+  return basePrompt;
 }
 
 async function makeRequestWithRetry(url, data, retries, delay) {
@@ -83,7 +120,7 @@ async function makeRequestWithRetry(url, data, retries, delay) {
       if (i < retries && error.response && error.response.status === 429) {
         await new Promise((resolve) =>
           setTimeout(resolve, delay * Math.pow(2, i))
-        ); // 指数的バックオフ
+        );
       } else {
         throw error;
       }
@@ -102,12 +139,15 @@ async function makeRequestWithRetry(url, data, retries, delay) {
 .input-group {
   display: flex;
   gap: 10px;
+  justify-content: space-between;
 }
 .input {
   flex-grow: 1;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  min-height: 100px;
+  resize: vertical;
 }
 .btn {
   padding: 10px 20px;
@@ -124,5 +164,9 @@ async function makeRequestWithRetry(url, data, retries, delay) {
   background-color: #f8f9fa;
   padding: 20px;
   border-radius: 5px;
+  word-wrap: break-word;
+}
+.response > pre {
+  white-space: pre-wrap;
 }
 </style>
