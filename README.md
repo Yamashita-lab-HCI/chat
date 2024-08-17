@@ -1,47 +1,5 @@
 # chat
 
-# プロジェクトのディレクトリ構造
-
-```
-src/
-|-- assets/ # 静的リソース (画像、スタイルシート、フォントなど)
-|-- components/ # 再利用可能なVueコンポーネント
-| |-- ChatMessage.vue
-| |-- ChatInput.vue
-| |-- UserList.vue
-| |-- ...
-|-- views/ # ページのVueコンポーネント (各ルートに対応)
-| |-- Home.vue
-| |-- ChatRoom.vue
-| |-- UserProfile.vue
-| |-- ...
-|-- router/ # Vue Routerに関する設定
-| |-- index.js
-|-- store/ # Vuexに関する状態管理
-| |-- index.js
-| |-- modules/
-| |-- chat.js
-| |-- user.js
-| |-- ...
-|-- App.vue # メインのVueコンポーネント
-|-- main.js # アプリケーションのエントリポイント
-```
-
-# 実行
-
-yarnに切り替えたので、
-
-```bash
-yarn build
-```
-
-にしてください。
-ローカルでのツールを見ているときは、
-
-```bash
-yarn serve
-```
-
 # フロントエンド
 
 **Vue**を使用する．UIはVuestic-UIを使用．
@@ -51,6 +9,14 @@ yarn serve
 
 ```bash
 npm install
+```
+
+## .env
+```
+VUE_APP_API_KEY='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'
+VUE_APP_BASE_URL=http://127.0.0.1:8000/api/
+VUE_APP_STATIC_URL=http://127.0.0.1:8000/static/
+VUE_APP_WS_URL=ws://127.0.0.1:8001/
 ```
 
 ### Compiles and hot-reloads for development
