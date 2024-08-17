@@ -123,7 +123,7 @@ export default {
           `${process.env.VUE_APP_BASE_URL}create_default_room/`,
           {
             room_name: "HomePage",
-            room_id: 0,
+            room_id: 1,
           },
           {
             headers: {

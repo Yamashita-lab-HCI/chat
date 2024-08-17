@@ -56,39 +56,18 @@ const store = useStore();
 
 async function askChatGPT(purpose) {
   if (!state.prompt.trim()) {
-    state.response = "⚠️ 質問を入力してください。";
+    state.response = "⚠️ Please enter your question.";
     return;
   }
 
   let requestData = {
     model: "gpt-3.5-turbo",
-    messages: [{ role: "user", content: state.prompt }],
+    messages: [
+      { role: "user", content: generatePrompt(state.prompt, purpose) },
+    ],
     max_tokens: 256,
     temperature: 0.7,
   };
-
-  // 目的に応じたリクエストデータの調整
-  switch (purpose) {
-    case "translate":
-      requestData.messages[0].content =
-        "Translate the given text into English: " + state.prompt;
-      break;
-    case "decision":
-      requestData.messages[0].content =
-        "Answer in English. Provide decision-making support based on the given input: " +
-        state.prompt;
-      break;
-    case "opinion":
-      requestData.messages[0].content =
-        "Answer in English. Provide an opinion on the given topic: " +
-        state.prompt;
-      break;
-    case "keywords":
-      requestData.messages[0].content =
-        "Answer in English. Extract only the important keywords from the given text: " +
-        state.prompt;
-      break;
-  }
 
   try {
     const result = await makeRequestWithRetry(
@@ -105,14 +84,32 @@ async function askChatGPT(purpose) {
       answer: state.response,
     });
   } catch (error) {
-    console.error("ChatGPTからの応答の取得に失敗しました:", error);
+    console.error("Failed to get response from ChatGPT:", error);
     if (error.response && error.response.data && error.response.data.error) {
-      state.response = `⚠️ エラーが発生しました: ${error.response.data.error.message}. 詳細はOpenAIのドキュメントを参照してください。`;
+      state.response = `⚠️ An error occurred: ${error.response.data.error.message}. Please refer to OpenAI's documentation for details.`;
     } else {
-      state.response =
-        "⚠️ 不明なエラーが発生しました。サポートに連絡してください。";
+      state.response = "⚠️ An unknown error occurred. Please contact support.";
     }
   }
+}
+
+function generatePrompt(input, purpose) {
+  let basePrompt = "";
+  switch (purpose) {
+    case "translate":
+      basePrompt = `Please translate the following word or phrase into the specified language (if no language is specified, translate into English): ${input}`;
+      break;
+    case "decision":
+      basePrompt = `Please provide decision-making support based on the following information (if no language is specified, respond in English): ${input}`;
+      break;
+    case "opinion":
+      basePrompt = `Please provide your opinion on the following topic (if no language is specified, respond in English): ${input}`;
+      break;
+    case "keywords":
+      basePrompt = `Please provide ideas or suggestions related to the following keyword (if no language is specified, respond in English): ${input}`;
+      break;
+  }
+  return basePrompt;
 }
 
 async function makeRequestWithRetry(url, data, retries, delay) {

@@ -16,7 +16,7 @@
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
     "@vuestic/ag-grid-theme": "^1.1.4",
-    "axios": "^1.7.2",
+    "axios": "^1.7.4",
     "braces": "^3.0.3",
     "consolidate": "^1.0.3",
     "core-js": "^3.37.1",
@@ -49,7 +49,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.26.0",
     "eslint-webpack-plugin": "^3.2.0",
-    "postcss": "^8.4.39",
+    "postcss": "^8.4.40",
     "prettier": "^3.3.2",
     "vue-cli-plugin-vuestic-ui": "~1.0.11",
     "vue-loader": "^17.4.2"
