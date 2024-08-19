@@ -32,9 +32,11 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { reactive, computed } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
+
+const store = useStore();
 
 const state = reactive({
   prompt: "",
@@ -52,7 +54,8 @@ const http = axios.create({
   },
 });
 
-const store = useStore();
+const currentRoom = computed(() => store.state.currentRoom);
+const messages = computed(() => store.state.messages);
 
 async function askChatGPT(purpose) {
   if (!state.prompt.trim()) {
@@ -60,10 +63,20 @@ async function askChatGPT(purpose) {
     return;
   }
 
+  const conversationHistory = messages.value.map((msg) => ({
+    role:
+      msg.sender === store.state.currentUser.username ? "user" : "assistant",
+    content: msg.content,
+  }));
+
   let requestData = {
     model: "gpt-3.5-turbo",
     messages: [
-      { role: "user", content: generatePrompt(state.prompt, purpose) },
+      ...conversationHistory,
+      {
+        role: "user",
+        content: generatePrompt(state.prompt, purpose, conversationHistory),
+      },
     ],
     max_tokens: 256,
     temperature: 0.7,
@@ -78,8 +91,22 @@ async function askChatGPT(purpose) {
     );
     state.response = result.data.choices[0].message.content;
 
+    // メッセージをストアに追加
+    store.dispatch("addMessage", {
+      content: state.prompt,
+      sender: store.state.currentUser.username,
+      room: currentRoom.value,
+    });
+
+    // ChatGPTの応答もメッセージとして追加
+    store.dispatch("addMessage", {
+      content: state.response,
+      sender: "ChatGPT",
+      room: currentRoom.value,
+    });
+
     await axios.post(process.env.VUE_APP_BASE_URL + "record/", {
-      username: store.state.currentUser,
+      username: store.state.currentUser.username,
       question: state.prompt,
       answer: state.response,
     });
@@ -93,20 +120,24 @@ async function askChatGPT(purpose) {
   }
 }
 
-function generatePrompt(input, purpose) {
+function generatePrompt(input, purpose, history) {
   let basePrompt = "";
+  const context = history
+    .map((msg) => `${msg.role}: ${msg.content}`)
+    .join("\n");
+
   switch (purpose) {
     case "translate":
-      basePrompt = `Please translate the following word or phrase into the specified language (if no language is specified, translate into English): ${input}`;
+      basePrompt = `Given the following conversation context:\n\n${context}\n\nPlease translate the following: ${input}`;
       break;
     case "decision":
-      basePrompt = `Please provide decision-making support based on the following information (if no language is specified, respond in English): ${input}`;
+      basePrompt = `Based on this conversation:\n\n${context}\n\nPlease provide decision-making support for: ${input}`;
       break;
     case "opinion":
-      basePrompt = `Please provide your opinion on the following topic (if no language is specified, respond in English): ${input}`;
+      basePrompt = `Considering this conversation:\n\n${context}\n\nPlease provide your opinion on: ${input}`;
       break;
     case "keywords":
-      basePrompt = `Please provide ideas or suggestions related to the following keyword (if no language is specified, respond in English): ${input}`;
+      basePrompt = `In the context of this conversation:\n\n${context}\n\nPlease provide ideas or suggestions related to: ${input}`;
       break;
   }
   return basePrompt;
