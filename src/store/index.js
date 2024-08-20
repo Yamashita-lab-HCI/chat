@@ -17,9 +17,13 @@ const store = createStore({
       iconColor: "primary",
       chatSocket: null,
       roomListSocket: null,
+      userType: "",
     };
   },
   mutations: {
+    setUserType(state, userType) {
+      state.userType = userType;
+    },
     setIconColor(state, color) {
       state.iconColor = color;
     },

@@ -18,16 +18,13 @@
         ></message-list>
         <message-input :value="inputMessage" @send="addMessage"></message-input>
       </div>
-      <!-- プロンプト表示部分 -->
-      <prompt-display></prompt-display>
+      <prompt-display v-if="userType === 'NNS'"></prompt-display>
     </div>
   </div>
 </template>
 
 <script>
-// import dummyData from '@/dummyData';
 import MessageList from "@/components/MessageList.vue";
-// import MessageInput from "@/components/MessageInput.vue";
 import PromptDisplay from "@/components/PromptDisplay.vue";
 import axios from "axios";
 
@@ -68,6 +65,9 @@ export default {
     currentUser() {
       return this.$store.state.currentUser;
     },
+    userType() {
+      return this.$store.state.userType;
+    },
   },
 
   created() {
@@ -76,7 +76,7 @@ export default {
   methods: {
     initWebSocket() {
       // WebSocketのURLを指定します。例: ws://localhost:3000
-      const wsUrl = "YOUR_WEBSOCKET_ENDPOINT";
+      const wsUrl = process.env.VUE_APP_WS_URL;
       this.socket = new WebSocket(wsUrl);
 
       // WebSocket接続が開かれた時のイベントハンドラ

@@ -15,6 +15,13 @@
           />
         </div>
         <div class="form-section">
+          <va-select
+            v-model="userType"
+            :options="userTypes"
+            placeholder="Select NNS or NS"
+          />
+        </div>
+        <div class="form-section">
           <VaButton type="submit" class="mr-6 mb-2" color="primary"
             >Log In</VaButton
           >
@@ -47,7 +54,12 @@ export default {
     const store = useStore();
     const username = ref("");
     const password = ref("");
+    const userType = ref("");
     const csrfToken = ref("");
+    const userTypes = ref([
+      { label: "NNS", value: "NNS" },
+      { label: "NS", value: "NS" },
+    ]);
 
     onMounted(() => {
       csrfToken.value = document.cookie
@@ -73,6 +85,7 @@ export default {
         .then((response) => {
           if (response.data && response.data.status == "success") {
             store.commit("setCurrentUser", username.value);
+            store.commit("setUserType", userType.value);
             store.dispatch("logIn");
             alert("Login Success!");
             router.push("/home").then(() => {
@@ -98,6 +111,8 @@ export default {
     return {
       username,
       password,
+      userType,
+      userTypes,
       onLogin,
       goToRegister,
     };
