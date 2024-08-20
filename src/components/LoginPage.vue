@@ -18,7 +18,9 @@
           <va-select
             v-model="userType"
             :options="userTypes"
+            label="User Type"
             placeholder="Select NNS or NS"
+            clearable
           />
         </div>
         <div class="form-section">
@@ -44,11 +46,15 @@
 <script>
 import axios from "axios";
 import { useRouter } from "vue-router";
-import { ref, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useStore } from "vuex";
+import { VaSelect } from "vuestic-ui";
 
 export default {
   name: "LoginPage",
+  components: {
+    VaSelect,
+  },
   setup() {
     const router = useRouter();
     const store = useStore();
@@ -56,9 +62,9 @@ export default {
     const password = ref("");
     const userType = ref("");
     const csrfToken = ref("");
-    const userTypes = ref([
-      { label: "NNS", value: "NNS" },
-      { label: "NS", value: "NS" },
+    const userTypes = reactive([
+      { text: "NNS", value: "NNS" },
+      { text: "NS", value: "NS" },
     ]);
 
     onMounted(() => {
