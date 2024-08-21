@@ -91,11 +91,18 @@ export default {
         .then((response) => {
           if (response.data && response.data.status == "success") {
             store.commit("setCurrentUser", username.value);
-            store.commit("setUserType", userType.value);
+            store.commit("setUserType", userType.value.value);
+            console.log("Setting userType", userType.value.value);
             store.dispatch("logIn");
             alert("Login Success!");
+            // router.push("/home");
+            // ホームページに遷移した後、ユーザータイプを再設定
             router.push("/home").then(() => {
-              location.reload();
+              // 少し遅延を入れて、ステートが確実に更新されるようにする
+              setTimeout(() => {
+                store.commit("setUserType", userType.value.value);
+                console.log("Re-setting userType", userType.value.value);
+              }, 100);
             });
           } else {
             alert("Login Failed! " + (response.data?.message || ""));

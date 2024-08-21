@@ -17,7 +17,7 @@ const store = createStore({
       iconColor: "primary",
       chatSocket: null,
       roomListSocket: null,
-      userType: "",
+      userType: null,
     };
   },
   mutations: {

@@ -44,6 +44,7 @@ export default {
       await this.$store.dispatch("fetchCurrentUser");
       if (this.currentUser) {
         console.log("Current user:", this.currentUser);
+        console.log("User type:", this.userType);
         await this.$store.dispatch("fetchIconColor");
         const csrfToken = this.getCookie("csrftoken");
         await this.createDefaultRoom(csrfToken);
@@ -75,15 +76,12 @@ export default {
   },
   methods: {
     initWebSocket() {
-      // WebSocketのURLを指定します。例: ws://localhost:3000
-      const wsUrl = process.env.VUE_APP_WS_URL;
+      const wsUrl = "YOUR_WEBSOCKET_ENDPOINT";
       this.socket = new WebSocket(wsUrl);
 
       // WebSocket接続が開かれた時のイベントハンドラ
       this.socket.onopen = () => {
         console.log("WebSocket connection opened");
-        // 必要に応じてサーバーにメッセージを送信
-        // this.socket.send("Hello Server!");
       };
 
       // メッセージを受信した時のイベントハンドラ
