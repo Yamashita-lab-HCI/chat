@@ -99,7 +99,9 @@ export default {
               userType: userTypeValue,
             });
             alert("Login Success!");
-            router.push("/home");
+            router.push("/home").then(() => {
+              location.reload();
+            });
           } else {
             alert("Login Failed! " + (response.data?.message || ""));
           }

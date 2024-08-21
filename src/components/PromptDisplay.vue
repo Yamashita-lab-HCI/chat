@@ -58,16 +58,21 @@ const currentRoom = computed(() => store.state.currentRoom);
 const messages = computed(() => store.state.messages);
 
 async function askChatGPT(purpose) {
+  console.log("Messages:", store.state.messages);
   if (!state.prompt.trim()) {
     state.response = "⚠️ Please enter your question.";
     return;
   }
 
-  const conversationHistory = messages.value.map((msg) => ({
-    role:
-      msg.sender === store.state.currentUser.username ? "user" : "assistant",
-    content: msg.content,
-  }));
+  const conversationHistory = messages.value
+    .map((msg) => ({
+      role:
+        msg.user__username === store.state.currentUser.username
+          ? "user"
+          : "assistant",
+      content: msg.text.replace(/<\/?p>/g, "").trim(), // HTMLタグを削除
+    }))
+    .filter((msg) => msg.content !== ""); // 空のメッセージを除外
 
   let requestData = {
     model: "gpt-3.5-turbo",
@@ -81,6 +86,8 @@ async function askChatGPT(purpose) {
     max_tokens: 256,
     temperature: 0.7,
   };
+
+  console.log("Request Data:", JSON.stringify(requestData, null, 2));
 
   try {
     const result = await makeRequestWithRetry(
@@ -114,6 +121,8 @@ async function askChatGPT(purpose) {
     console.error("Failed to get response from ChatGPT:", error);
     if (error.response && error.response.data && error.response.data.error) {
       state.response = `⚠️ An error occurred: ${error.response.data.error.message}. Please refer to OpenAI's documentation for details.`;
+    } else if (error.message) {
+      state.response = `⚠️ An error occurred: ${error.message}. Please try again later.`;
     } else {
       state.response = "⚠️ An unknown error occurred. Please contact support.";
     }
@@ -122,9 +131,10 @@ async function askChatGPT(purpose) {
 
 function generatePrompt(input, purpose, history) {
   let basePrompt = "";
-  const context = history
-    .map((msg) => `${msg.role}: ${msg.content}`)
-    .join("\n");
+  const context =
+    history.length > 0
+      ? history.map((msg) => `${msg.role}: ${msg.content}`).join("\n")
+      : "No previous conversation.";
 
   switch (purpose) {
     case "translate":
