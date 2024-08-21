@@ -45,9 +45,16 @@ export default {
       if (this.currentUser) {
         console.log("Current user:", this.currentUser);
         console.log("User type:", this.userType);
+        // ローカルストレージからユーザータイプを取得して設定
+        const storedUserType = localStorage.getItem("userType");
+        if (storedUserType) {
+          this.$store.commit("setUserType", storedUserType);
+        }
         await this.$store.dispatch("fetchIconColor");
         const csrfToken = this.getCookie("csrftoken");
         await this.createDefaultRoom(csrfToken);
+        // メッセージを取得
+        await this.$store.dispatch("fetchMessages");
       } else {
         console.error("Current user is null");
       }

@@ -90,20 +90,16 @@ export default {
         )
         .then((response) => {
           if (response.data && response.data.status == "success") {
+            const userTypeValue = userType.value.value;
             store.commit("setCurrentUser", username.value);
-            store.commit("setUserType", userType.value.value);
-            console.log("Setting userType", userType.value.value);
-            store.dispatch("logIn");
-            alert("Login Success!");
-            // router.push("/home");
-            // ホームページに遷移した後、ユーザータイプを再設定
-            router.push("/home").then(() => {
-              // 少し遅延を入れて、ステートが確実に更新されるようにする
-              setTimeout(() => {
-                store.commit("setUserType", userType.value.value);
-                console.log("Re-setting userType", userType.value.value);
-              }, 100);
+            store.commit("setUserType", userTypeValue);
+            localStorage.setItem("userType", userTypeValue); // ローカルストレージに保存
+            store.dispatch("logIn", {
+              username: username.value,
+              userType: userTypeValue,
             });
+            alert("Login Success!");
+            router.push("/home");
           } else {
             alert("Login Failed! " + (response.data?.message || ""));
           }

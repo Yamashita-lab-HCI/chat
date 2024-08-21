@@ -137,6 +137,10 @@ const store = createStore({
         .then((response) => {
           commit("setCurrentUser", response.data);
           localStorage.setItem("username", response.data.username);
+          if (response.data.userType) {
+            commit("setUserType", response.data.userType);
+            localStorage.setItem("userType", response.data.userType);
+          }
         })
         .catch((error) => {
           console.error("Error fetching current user:", error);
@@ -281,11 +285,29 @@ const store = createStore({
         console.error("WebSocket is not open. Unable to send message.");
       }
     },
-    logIn({ commit }) {
+    logIn({ commit }, { username, userType }) {
       commit("setLoggedIn", true);
+      commit("setCurrentUser", username);
+      commit("setUserType", userType);
+      localStorage.setItem("username", username);
+      localStorage.setItem("userType", userType);
     },
     logOut({ commit }) {
       commit("setLoggedIn", false);
+      commit("setCurrentUser", null);
+      commit("setUserType", null);
+      localStorage.removeItem("username");
+      localStorage.removeItem("userType");
+    },
+    initializeApp({ commit }) {
+      const username = localStorage.getItem("username");
+      const userType = localStorage.getItem("userType");
+      if (username) {
+        commit("setCurrentUser", username);
+      }
+      if (userType) {
+        commit("setUserType", userType);
+      }
     },
     addRoom({ commit }, room) {
       commit("addRoom", room);
