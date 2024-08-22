@@ -65,14 +65,15 @@ async function askChatGPT(purpose) {
   }
 
   const conversationHistory = messages.value
+    .filter((msg) => msg && msg.text)
     .map((msg) => ({
       role:
         msg.user__username === store.state.currentUser.username
           ? "user"
           : "assistant",
-      content: msg.text.replace(/<\/?p>/g, "").trim(), // HTMLタグを削除
+      content: msg.text.replace(/<\/?p>/g, "").trim(),
     }))
-    .filter((msg) => msg.content !== ""); // 空のメッセージを除外
+    .filter((msg) => msg.content !== "");
 
   let requestData = {
     model: "gpt-3.5-turbo",
@@ -98,24 +99,20 @@ async function askChatGPT(purpose) {
     );
     state.response = result.data.choices[0].message.content;
 
-    // メッセージをストアに追加
-    store.dispatch("addMessage", {
+    // ユーザーの質問をメッセージとして追加
+    /* store.dispatch("addMessage", {
       content: state.prompt,
       sender: store.state.currentUser.username,
       room: currentRoom.value,
-    });
+    }); */
 
-    // ChatGPTの応答もメッセージとして追加
-    store.dispatch("addMessage", {
-      content: state.response,
-      sender: "ChatGPT",
-      room: currentRoom.value,
-    });
-
+    // ChatGPTの応答をrecordとして記録
     await axios.post(process.env.VUE_APP_BASE_URL + "record/", {
       username: store.state.currentUser.username,
       question: state.prompt,
       answer: state.response,
+      purpose: purpose,
+      room: currentRoom.value,
     });
   } catch (error) {
     console.error("Failed to get response from ChatGPT:", error);
