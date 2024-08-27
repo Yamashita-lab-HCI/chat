@@ -17,7 +17,7 @@
         ></message-list>
         <message-input :value="inputMessage" @send="addMessage"></message-input>
       </div>
-      <prompt-display></prompt-display>
+      <prompt-display v-if="userType === 'NNS'"></prompt-display>
     </div>
   </div>
 </template>
@@ -39,7 +39,13 @@ export default {
     };
   },
   computed: {
-    ...mapState(["messages", "currentRoom", "currentUser", "iconColor"]),
+    ...mapState([
+      "messages",
+      "currentRoom",
+      "currentUser",
+      "iconColor",
+      "userType",
+    ]),
   },
   watch: {
     "$route.params.id": {
@@ -78,18 +84,35 @@ export default {
       this.$store.commit("SET_MESSAGES", newMessages);
     },
   },
-  created() {
-    this.$store.dispatch("fetchIconColor");
+  async created() {
+    await this.$store.dispatch("fetchIconColor");
+    // ローカルストレージからユーザータイプを取得して設定
+    const storedUserType = localStorage.getItem("userType");
+    if (storedUserType) {
+      this.$store.commit("setUserType", storedUserType);
+    }
   },
-  mounted() {
-    this.initializeRoom(this.$route.params.id);
-    this.initWebSocket();
+  async mounted() {
+    try {
+      await this.fetchCurrentUser();
+      if (this.currentUser) {
+        console.log("Current user:", this.currentUser);
+        console.log("User type:", this.userType);
+        await this.initializeRoom(this.$route.params.id);
+        this.initWebSocket();
+      } else {
+        console.error("Current user is null");
+      }
+    } catch (error) {
+      console.error("Error in mounted hook:", error);
+    }
   },
   beforeUnmount() {
     this.closeWebSocket();
   },
 };
 </script>
+
 <style>
 .home {
   display: flex;

@@ -113,13 +113,14 @@ export default {
             headers: {
               "X-CSRFToken": csrfToken,
             },
+            withCredentials: true,
           }
         )
         .then(() => {
           if (this.$store.state.socket) {
             this.$store.state.socket.close();
           }
-          this.logOut();
+          this.$store.dispatch("logOut");
           this.$router.push("/login");
         })
         .catch((error) => {
