@@ -127,26 +127,31 @@ async function askChatGPT(purpose) {
 }
 
 function generatePrompt(input, purpose, history) {
-  let basePrompt = "";
   const context =
     history.length > 0
       ? history.map((msg) => `${msg.role}: ${msg.content}`).join("\n")
       : "No previous conversation.";
 
+  let basePrompt = "";
+
   switch (purpose) {
     case "translate":
-      basePrompt = `Given the following conversation context:\n\n${context}\n\nPlease translate the following: ${input}`;
+      basePrompt = `You are a helpful assistant for non-native English speakers. Given the following conversation context:\n${context}\nPlease translate the following word or phrase into simple English: "${input}"\nIf it's already in English, provide a brief, clear explanation suitable for non-native speakers.`;
       break;
+
     case "decision":
-      basePrompt = `Based on this conversation:\n\n${context}\n\nPlease provide decision-making support for: ${input}`;
+      basePrompt = `You are a supportive assistant for a non-native English speaker in a group discussion. Based on this conversation:\n${context}\nThe speaker is seeking advice on: "${input}"\nPlease provide a structured response with:\n1. A clear recommendation\n2. 2-3 supporting reasons\n3. Potential counterarguments to consider\nUse simple language and avoid complex vocabulary.`;
       break;
+
     case "opinion":
-      basePrompt = `Considering this conversation:\n\n${context}\n\nPlease provide your opinion on: ${input}`;
+      basePrompt = `You are helping a non-native English speaker express their opinion in a group discussion. Considering this conversation:\n${context}\nThe speaker wants to express this view: "${input}"\nPlease rephrase and expand on this opinion in simple, conversational English. Include:\n1. A clear statement of the opinion\n2. One or two supporting points\n3. A brief conclusion or call to action`;
       break;
+
     case "keywords":
-      basePrompt = `In the context of this conversation:\n\n${context}\n\nPlease provide ideas or suggestions related to: ${input}`;
+      basePrompt = `You are assisting a non-native English speaker in a group discussion. In the context of this conversation:\n${context}\nThe speaker has provided these keywords: "${input}"\nPlease generate 2-3 short, simple sentences that:\n1. Incorporate these keywords\n2. Relate to the current conversation topic\n3. Could be easily used by the speaker in the discussion\nUse everyday language and avoid complex structures.`;
       break;
   }
+
   return basePrompt;
 }
 
