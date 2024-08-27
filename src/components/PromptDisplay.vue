@@ -127,32 +127,60 @@ async function askChatGPT(purpose) {
 }
 
 function generatePrompt(input, purpose, history) {
+  const background = `We are playing a desert survival game where participants rank essential items and work towards a unified team decision.`;
+  const selfIntroduction = `I am a non-native speaker participating in this discussion.`;
+
   const context =
     history.length > 0
       ? history.map((msg) => `${msg.role}: ${msg.content}`).join("\n")
       : "No previous conversation.";
 
+  // 言語レベルを固定値として設定
+  const userLanguageLevel = "intermediate";
+
   let basePrompt = "";
 
   switch (purpose) {
     case "translate":
-      basePrompt = `You are a helpful assistant for non-native English speakers. Given the following conversation context:\n${context}\nPlease translate the following word or phrase into simple English: "${input}"\nIf it's already in English, provide a brief, clear explanation suitable for non-native speakers.`;
+      basePrompt = `You are a helpful assistant for language learners. Given this conversation:\n${context}\n
+1. Identify the source language of: "${input}"
+2. If it's Japanese, translate it to simple English suitable for a ${userLanguageLevel} level speaker.
+3. If it's English, translate it to natural Japanese.
+4. If it's neither, translate to both simple English and natural Japanese.
+5. Provide a brief explanation of any idiomatic expressions or cultural nuances.`;
       break;
 
     case "decision":
-      basePrompt = `You are a supportive assistant for a non-native English speaker in a group discussion. Based on this conversation:\n${context}\nThe speaker is seeking advice on: "${input}"\nPlease provide a structured response with:\n1. A clear recommendation\n2. 2-3 supporting reasons\n3. Potential counterarguments to consider\nUse simple language and avoid complex vocabulary.`;
+      basePrompt = `You are assisting a non-native English speaker in a group discussion about desert survival. Based on this conversation:\n${context}\n
+The group is considering the following decision: "${input}"
+Please provide a structured response (2-3 sentences) that includes:
+1. A clear statement supporting or opposing this decision
+2. Two main reasons or factors to consider for this group decision
+3. A potential alternative or compromise, if applicable
+Use simple language suitable for a ${userLanguageLevel} level English speaker and focus on facilitating group consensus.`;
       break;
 
     case "opinion":
-      basePrompt = `You are helping a non-native English speaker express their opinion in a group discussion. Considering this conversation:\n${context}\nThe speaker wants to express this view: "${input}"\nPlease rephrase and expand on this opinion in simple, conversational English. Include:\n1. A clear statement of the opinion\n2. One or two supporting points\n3. A brief conclusion or call to action`;
+      basePrompt = `You're helping a non-native English speaker express their personal view in a group discussion. Context:\n${context}\n
+The speaker wants to express this opinion: "${input}"
+Please rephrase and elaborate on this opinion in simple, conversational English (2-3 sentences):
+1. A clear statement of the personal opinion
+2. One main supporting point or example
+3. A brief conclusion or call for consideration from others
+Use language suitable for a ${userLanguageLevel} level English speaker and focus on individual perspective.`;
       break;
 
     case "keywords":
-      basePrompt = `You are assisting a non-native English speaker in a group discussion. In the context of this conversation:\n${context}\nThe speaker has provided these keywords: "${input}"\nPlease generate 2-3 short, simple sentences that:\n1. Incorporate these keywords\n2. Relate to the current conversation topic\n3. Could be easily used by the speaker in the discussion\nUse everyday language and avoid complex structures.`;
+      basePrompt = `You're assisting a non-native English speaker in a group discussion. Context:\n${context}\n
+The speaker provided these keywords: "${input}"
+Generate 2-3 short, simple sentences that:
+1. Use these keywords
+2. Relate to the desert survival topic
+3. Are easy for a ${userLanguageLevel} level English speaker to use in the discussion`;
       break;
   }
 
-  return basePrompt;
+  return `${background}\n\n${selfIntroduction}\n\n${basePrompt}`;
 }
 
 async function makeRequestWithRetry(url, data, retries, delay) {
