@@ -5,7 +5,7 @@
         color="primary"
         border="top"
         border-color="primary"
-        class="mb-6 alert-full-width"
+        class="mb-6 alert-partial-width"
       >
         Chatting Room
       </VaAlert>
@@ -15,17 +15,11 @@
     </div>
     <div class="chat-container">
       <div class="chat-section">
-        <div class="message-list-container">
-          <message-list
-            :messages="messages"
-            @quote="quoteMessage"
-            @update-messages="updateMessages"
-          ></message-list>
-        </div>
-        <message-input
-          :value="inputMessage"
-          @send="sendMessage"
-        ></message-input>
+        <message-list
+          :messages="messages"
+          @quote="quoteMessage"
+          @update-messages="updateMessages"
+        ></message-list>
       </div>
       <prompt-display v-if="userType === 'NNS'"></prompt-display>
     </div>
@@ -211,19 +205,11 @@ export default {
 .chat-container {
   display: flex;
   flex-direction: row;
-  flex: 1;
-  overflow: hidden;
 }
 
 .chat-section {
+  max-height: 500px;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.message-list-container {
-  flex: 1;
-  overflow-y: auto; /* メッセージリストがスクロール可能 */
 }
 
 .mt-4 {
