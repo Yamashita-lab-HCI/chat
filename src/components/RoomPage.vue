@@ -24,8 +24,7 @@
         </div>
         <message-input
           :value="inputMessage"
-          @send="addMessage"
-          class="message-input"
+          @send="sendMessage"
         ></message-input>
       </div>
       <prompt-display v-if="userType === 'NNS'"></prompt-display>
@@ -93,6 +92,7 @@
 
 <script>
 import MessageList from "@/components/MessageList.vue";
+// import MessageInput from "@/components/MessageInput.vue"; // MessageInput コンポーネントをインポート
 import PromptDisplay from "@/components/PromptDisplay.vue";
 import { mapState, mapActions } from "vuex";
 import { VaButton, VaModal } from "vuestic-ui";
@@ -143,6 +143,12 @@ export default {
       await this.fetchMessages(roomId);
       await this.fetchCurrentUser();
       this.initWebSocket();
+    },
+    sendMessage() {
+      if (this.inputMessage.trim()) {
+        this.addMessage(this.inputMessage);
+        this.inputMessage = "";
+      }
     },
     quoteMessage(message) {
       this.inputMessage = `> ${message}\n`;
@@ -213,12 +219,11 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .message-list-container {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto; /* メッセージリストがスクロール可能 */
 }
 
 .mt-4 {
