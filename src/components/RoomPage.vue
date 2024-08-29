@@ -12,6 +12,9 @@
       <va-button class="mt-4" @click="showSurvivalInfo = true">
         Survival Tasks Info
       </va-button>
+      <va-button class="mt-4" @click="showJapaneseSurvivalInfo = true">
+        サバイバル情報
+      </va-button>
     </div>
     <div class="chat-container">
       <div class="chat-section">
@@ -33,7 +36,7 @@
           items in order of importance for survival:
         </p>
         <ul>
-          <li>A loaded .45-caliber pistol</li>
+          <li>A loaded 45-caliber pistol</li>
           <li>Newspapers (one per person)</li>
           <li>Cigarette lighter (without fluid)</li>
           <li>Extra shirt and pants for each survivor</li>
@@ -81,6 +84,52 @@
         <va-button @click="showSurvivalInfo = false">Close</va-button>
       </template>
     </va-modal>
+
+    <va-modal v-model="showJapaneseSurvivalInfo" ok-text="了解">
+      <template #content>
+        <h3 class="va-h3">サバイバルタスク</h3>
+        <h4 class="va-h4">北極サバイバルタスク</h4>
+        <p>
+          あなたの飛行機が北極で不時着しました。飛行機が炎上する前に、グループはいくつかのアイテムを回収しました。あなたの課題は、これらのアイテムを生存のために重要な順に並べることです：
+        </p>
+        <ul>
+          <li>装填済みの45口径ピストル</li>
+          <li>新聞（1人1部）</li>
+          <li>ライター（燃料なし）</li>
+          <li>各生存者用の予備のシャツとズボン</li>
+          <li>コンパス</li>
+        </ul>
+
+        <h4 class="va-h4">海洋サバイバルタスク</h4>
+        <p>
+          あなたと2人の仲間が大西洋を横断中にヨットが沈没しました。救命いかだに乗り込みましたが、最も近い陸地まで約240km離れています。天気は晴れていますが、海は荒れています。無線は故障しており、救助を待つか自力で陸地に向かうかを決めなければなりません。ヨットが沈む前に6つのアイテムだけを回収できました。あなたの課題は、これらのアイテムを生存のために重要な順に並べることです：
+        </p>
+        <ul>
+          <li>5リットルの真水</li>
+          <li>信号用フレア</li>
+          <li>釣り道具セット</li>
+          <li>防水タープ</li>
+          <li>ソーラー充電式のハンドヘルドGPSナビゲーター</li>
+          <li>救急キット</li>
+        </ul>
+
+        <h4 class="va-h4">砂漠サバイバルタスク</h4>
+        <p>
+          7月中旬の午前10時、あなたの飛行機が砂漠に不時着しました。パイロットは事故で亡くなりましたが、あなたと他の2人の乗客は無傷で生き残りました。あなたたちの位置は予定のコースから105km外れており、最も近い既知の居住地から約110km南東にあります。あなたの課題は、これらのアイテムを生存のために重要な順に並べることです：
+        </p>
+        <ul>
+          <li>折りたたみナイフ</li>
+          <li>4本の電池付き懐中電灯</li>
+          <li>磁気コンパス</li>
+          <li>1人あたり2リットルの水</li>
+          <li>サングラス（全員分）</li>
+          <li>救急キット</li>
+        </ul>
+      </template>
+      <template #footer>
+        <va-button @click="showJapaneseSurvivalInfo = false">閉じる</va-button>
+      </template>
+    </va-modal>
   </div>
 </template>
 
@@ -103,6 +152,7 @@ export default {
     return {
       inputMessage: "",
       showSurvivalInfo: false,
+      showJapaneseSurvivalInfo: false,
     };
   },
   computed: {
