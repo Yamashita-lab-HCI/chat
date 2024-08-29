@@ -21,9 +21,9 @@
       <VaButton class="mr-6 mb-2" @click="() => askChatGPT('opinion')">
         Opinion
       </VaButton>
-      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('keywords')">
+      <!-- <VaButton class="mr-6 mb-2" @click="() => askChatGPT('keywords')">
         Keyword
-      </VaButton>
+      </VaButton> -->
     </div>
     <div class="response">
       <pre>{{ state.response }}</pre>
@@ -170,14 +170,14 @@ Please rephrase and elaborate on this opinion in simple, conversational English 
 Use language suitable for a ${userLanguageLevel} level English speaker and focus on individual perspective.`;
       break;
 
-    case "keywords":
+    /* case "keywords":
       basePrompt = `You're assisting a non-native English speaker in a group discussion. Context:\n${context}\n
 The speaker provided these keywords: "${input}"
 Generate 2-3 short, simple sentences that:
 1. Use these keywords
 2. Relate to the desert survival topic
 3. Are easy for a ${userLanguageLevel} level English speaker to use in the discussion`;
-      break;
+      break; */
   }
 
   return `${background}\n\n${selfIntroduction}\n\n${basePrompt}`;
