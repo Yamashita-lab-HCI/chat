@@ -147,7 +147,14 @@ function generatePrompt(input, purpose, history) {
 2. If it's Japanese, translate it to simple English suitable for a ${userLanguageLevel} level speaker.
 3. If it's English, translate it to natural Japanese.
 4. If it's neither, translate to both simple English and natural Japanese.
-5. Provide a brief explanation of any idiomatic expressions or cultural nuances.`;
+5. Provide a brief explanation of any idiomatic expressions or cultural nuances.
+
+Based on the above steps, provide a single, most appropriate response that includes:
+- The identified source language
+- The translation (to English if source is Japanese, to Japanese if source is English, or both if source is neither)
+- A brief explanation of any idiomatic expressions or cultural nuances (if applicable)
+
+Format your response as a concise paragraph, focusing on the most relevant information for the language learner.`;
       break;
 
     case "decision":
