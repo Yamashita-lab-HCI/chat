@@ -15,6 +15,15 @@
           />
         </div>
         <div class="form-section">
+          <va-select
+            v-model="userType"
+            :options="userTypes"
+            label="User Type"
+            placeholder="Select NNS or NS"
+            clearable
+          />
+        </div>
+        <div class="form-section">
           <VaButton type="submit" class="mr-6 mb-2" color="primary"
             >Log In</VaButton
           >
@@ -37,17 +46,26 @@
 <script>
 import axios from "axios";
 import { useRouter } from "vue-router";
-import { ref, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useStore } from "vuex";
+import { VaSelect } from "vuestic-ui";
 
 export default {
   name: "LoginPage",
+  components: {
+    VaSelect,
+  },
   setup() {
     const router = useRouter();
     const store = useStore();
     const username = ref("");
     const password = ref("");
+    const userType = ref("");
     const csrfToken = ref("");
+    const userTypes = reactive([
+      { text: "NNS", value: "NNS" },
+      { text: "NS", value: "NS" },
+    ]);
 
     onMounted(() => {
       csrfToken.value = document.cookie
@@ -72,8 +90,14 @@ export default {
         )
         .then((response) => {
           if (response.data && response.data.status == "success") {
+            const userTypeValue = userType.value.value;
             store.commit("setCurrentUser", username.value);
-            store.dispatch("logIn");
+            store.commit("setUserType", userTypeValue);
+            localStorage.setItem("userType", userTypeValue); // ローカルストレージに保存
+            store.dispatch("logIn", {
+              username: username.value,
+              userType: userTypeValue,
+            });
             alert("Login Success!");
             router.push("/home").then(() => {
               location.reload();
@@ -98,6 +122,8 @@ export default {
     return {
       username,
       password,
+      userType,
+      userTypes,
       onLogin,
       goToRegister,
     };

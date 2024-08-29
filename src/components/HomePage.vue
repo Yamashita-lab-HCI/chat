@@ -18,16 +18,13 @@
         ></message-list>
         <message-input :value="inputMessage" @send="addMessage"></message-input>
       </div>
-      <!-- プロンプト表示部分 -->
-      <prompt-display></prompt-display>
+      <prompt-display v-if="userType === 'NNS'"></prompt-display>
     </div>
   </div>
 </template>
 
 <script>
-// import dummyData from '@/dummyData';
 import MessageList from "@/components/MessageList.vue";
-// import MessageInput from "@/components/MessageInput.vue";
 import PromptDisplay from "@/components/PromptDisplay.vue";
 import axios from "axios";
 
@@ -47,9 +44,17 @@ export default {
       await this.$store.dispatch("fetchCurrentUser");
       if (this.currentUser) {
         console.log("Current user:", this.currentUser);
+        console.log("User type:", this.userType);
+        // ローカルストレージからユーザータイプを取得して設定
+        const storedUserType = localStorage.getItem("userType");
+        if (storedUserType) {
+          this.$store.commit("setUserType", storedUserType);
+        }
         await this.$store.dispatch("fetchIconColor");
         const csrfToken = this.getCookie("csrftoken");
         await this.createDefaultRoom(csrfToken);
+        // メッセージを取得
+        await this.$store.dispatch("fetchMessages");
       } else {
         console.error("Current user is null");
       }
@@ -68,6 +73,9 @@ export default {
     currentUser() {
       return this.$store.state.currentUser;
     },
+    userType() {
+      return this.$store.state.userType;
+    },
   },
 
   created() {
@@ -75,15 +83,12 @@ export default {
   },
   methods: {
     initWebSocket() {
-      // WebSocketのURLを指定します。例: ws://localhost:3000
       const wsUrl = "YOUR_WEBSOCKET_ENDPOINT";
       this.socket = new WebSocket(wsUrl);
 
       // WebSocket接続が開かれた時のイベントハンドラ
       this.socket.onopen = () => {
         console.log("WebSocket connection opened");
-        // 必要に応じてサーバーにメッセージを送信
-        // this.socket.send("Hello Server!");
       };
 
       // メッセージを受信した時のイベントハンドラ

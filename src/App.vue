@@ -113,13 +113,14 @@ export default {
             headers: {
               "X-CSRFToken": csrfToken,
             },
+            withCredentials: true,
           }
         )
         .then(() => {
           if (this.$store.state.socket) {
             this.$store.state.socket.close();
           }
-          this.logOut();
+          this.$store.dispatch("logOut");
           this.$router.push("/login");
         })
         .catch((error) => {
@@ -178,14 +179,17 @@ export default {
 <style>
 #app {
   text-align: center;
+  height: 100vh;
 }
 .container {
   display: flex;
+  height: 100%;
 }
 .sidebar {
   flex: 0 0 250px;
 }
 .main-content {
   flex: 1;
+  height: 100%;
 }
 </style>

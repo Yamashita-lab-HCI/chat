@@ -13,7 +13,7 @@ npm install
 
 ## .env
 ```
-VUE_APP_API_KEY='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'
+VUE_APP_API_KEY=''
 VUE_APP_BASE_URL=http://127.0.0.1:8000/api/
 VUE_APP_STATIC_URL=http://127.0.0.1:8000/static/
 VUE_APP_WS_URL=ws://127.0.0.1:8001/
