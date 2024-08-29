@@ -179,14 +179,17 @@ export default {
 <style>
 #app {
   text-align: center;
+  height: 100vh;
 }
 .container {
   display: flex;
+  height: 100%;
 }
 .sidebar {
   flex: 0 0 250px;
 }
 .main-content {
   flex: 1;
+  height: 100%;
 }
 </style>
