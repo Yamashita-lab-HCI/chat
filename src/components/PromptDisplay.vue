@@ -13,13 +13,13 @@
     </div>
     <div class="input-group">
       <VaButton class="mr-6 mb-2" @click="() => askChatGPT('translate')">
-        Translation
+        翻訳支援
       </VaButton>
       <VaButton class="mr-6 mb-2" @click="() => askChatGPT('decision')">
-        Decision
+        判断根拠
       </VaButton>
       <VaButton class="mr-6 mb-2" @click="() => askChatGPT('opinion')">
-        Opinion
+        アイデア展開支援
       </VaButton>
       <!-- <VaButton class="mr-6 mb-2" @click="() => askChatGPT('keywords')">
         Keyword
