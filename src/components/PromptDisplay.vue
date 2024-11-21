@@ -12,21 +12,46 @@
       Please click the button that best suits your purpose:
     </div>
     <div class="input-group">
-      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('translate')">
-        翻訳支援
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('LanguageSupport')">
+        Language Support
       </VaButton>
-      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('decision')">
-        判断根拠
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('LogicalSupport')">
+        Logical Support
       </VaButton>
-      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('opinion')">
-        アイデア展開支援
+      <VaButton class="mr-6 mb-2" @click="() => askChatGPT('ElaborateSupport')">
+        Elaborate Support
+      </VaButton>
+      <VaButton class="mr-6 mb-2" @click="showContext">
+        Show Context
       </VaButton>
       <!-- <VaButton class="mr-6 mb-2" @click="() => askChatGPT('keywords')">
         Keyword
       </VaButton> -->
+      <!-- context表示用エリアを追加 -->
+    <div v-if="state.showDebug" class="debug-info">
+      <h3>Debug Information:</h3>
+      <pre>{{ state.contextDebug }}</pre>
     </div>
-    <div class="response">
+    </div>
+    <div class="response relative">
+      <button 
+        class="va-button va-button--small absolute right-2 top-2"
+        @click="copyToClipboard(state.response)"
+      >
+        <span class="va-button__content">Copy</span>
+      </button>
       <pre>{{ state.response }}</pre>
+    </div>
+
+    <div v-if="state.showDebug" class="debug-info relative">
+      <button 
+        class="va-button va-button--small absolute right-2 top-2"
+        @click="copyToClipboard(state.contextDebug)"
+      >
+        <span class="va-button__content">Copy</span>
+      </button>
+      <h3>Debug Information:</h3>
+      <pre>{{ state.contextDebug }}</pre>
     </div>
   </div>
 </template>
@@ -36,6 +61,16 @@ import { reactive, computed } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
 
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    // オプション: コピー成功を通知
+    console.log('Copied to clipboard');
+  } catch (err) {
+    console.error('Failed to copy:', err);
+  }
+}
+
 const store = useStore();
 
 const state = reactive({
@@ -43,7 +78,29 @@ const state = reactive({
   response:
     "✅ Answer from ChatGPT will appear here. You can type in any languages!",
   isCollapsed: false,
+  showDebug: false,
+  contextDebug: ""
 });
+
+// context確認用の関数を追加
+function showContext() {
+  const conversationHistory = messages.value
+    .filter((msg) => msg && msg.text)
+    .map((msg) => ({
+      role: msg.user__username === store.state.currentUser.username ? "user" : "assistant",
+      content: msg.text.replace(/<\/?p>/g, "").trim(),
+    }))
+    .filter((msg) => msg.content !== "");
+
+  state.contextDebug = JSON.stringify({
+    messages: messages.value,
+    conversationHistory: conversationHistory,
+    currentRoom: currentRoom.value,
+    currentUser: store.state.currentUser.username
+  }, null, 2);
+  
+  state.showDebug = true;
+}
 
 const API_KEY = process.env.VUE_APP_API_KEY;
 const http = axios.create({
@@ -76,7 +133,7 @@ async function askChatGPT(purpose) {
     .filter((msg) => msg.content !== "");
 
   let requestData = {
-    model: "gpt-3.5-turbo",
+    model: "gpt-4-turbo-preview",
     messages: [
       ...conversationHistory,
       {
@@ -136,55 +193,59 @@ function generatePrompt(input, purpose, history) {
       : "No previous conversation.";
 
   // 言語レベルを固定値として設定
-  const userLanguageLevel = "intermediate";
+  const userJapaneseLevel = "intermediate";
 
   let basePrompt = "";
 
   switch (purpose) {
-    case "translate":
-      basePrompt = `You are a helpful assistant for language learners. Given this conversation:\n${context}\n
-1. Identify the source language of: "${input}"
-2. If it's Japanese, translate it to simple English suitable for a ${userLanguageLevel} level speaker.
-3. If it's English, translate it to natural Japanese.
-4. If it's neither, translate to both simple English and natural Japanese.
-5. Provide a brief explanation of any idiomatic expressions or cultural nuances.
+    case "languageSupport":
+      return `You are a Japanese language assistant for non-native speakers. Context:\n${context}\n
+Given this input: "${input}"
 
-Based on the above steps, provide a single, most appropriate response that includes:
-- The identified source language
-- The translation (to English if source is Japanese, to Japanese if source is English, or both if source is neither)
-- A brief explanation of any idiomatic expressions or cultural nuances (if applicable)
+REQUIRED FORMAT:
+1. If input is English:
+   - Provide natural Japanese translation
+   - Add pronunciation (furigana) for kanji
+   - Suggest common phrases used in Japanese discussions
+   
+2. If input is Japanese:
+   - Confirm the meaning in simple English
+   - Explain key grammar points
+   - Provide cultural context for business/group discussion
 
-Format your response as a concise paragraph, focusing on the most relevant information for the language learner.`;
-      break;
+3. Additional Support:
+   - Suggest polite alternatives if needed
+   - Explain any context-specific vocabulary
+   - Highlight common mistakes to avoid
 
-    case "decision":
-      basePrompt = `You are assisting a non-native English speaker in a group discussion about desert survival. Based on this conversation:\n${context}\n
-The group is considering the following decision: "${input}"
-Please provide a structured response (2-3 sentences) that includes:
-1. A clear statement supporting or opposing this decision
-2. Two main reasons or factors to consider for this group decision
-3. A potential alternative or compromise, if applicable
-Use simple language suitable for a ${userLanguageLevel} level English speaker and focus on facilitating group consensus.`;
-      break;
+Keep explanations clear and suitable for ${userJapaneseLevel} Japanese learners.`;
 
-    case "opinion":
-      basePrompt = `You're helping a non-native English speaker express their personal view in a group discussion. Context:\n${context}\n
-The speaker wants to express this opinion: "${input}"
-Please rephrase and elaborate on this opinion in simple, conversational English (2-3 sentences):
-1. A clear statement of the personal opinion
-2. One main supporting point or example
-3. A brief conclusion or call for consideration from others
-Use language suitable for a ${userLanguageLevel} level English speaker and focus on individual perspective.`;
-      break;
+    case "logicalSupport":
+      return `You are helping structure opinions for a Japanese discussion. Context:\n${context}\n
+Given this input: "${input}"
 
-    /* case "keywords":
-      basePrompt = `You're assisting a non-native English speaker in a group discussion. Context:\n${context}\n
-The speaker provided these keywords: "${input}"
-Generate 2-3 short, simple sentences that:
-1. Use these keywords
-2. Relate to the desert survival topic
-3. Are easy for a ${userLanguageLevel} level English speaker to use in the discussion`;
-      break; */
+Please help format the opinion in Japanese business style:
+1. 結論から言う (Start with conclusion)
+2. 理由を挙げる (Give reasons)
+3. 具体例を示す (Provide examples)
+4. まとめる (Summarize)
+
+Include:
+- Simple Japanese patterns for each section
+- Key phrases for expressing opinions politely
+- Cultural notes about Japanese discussion style`;
+
+    case "elaborateSupport":
+      return `You are helping develop ideas in Japanese. Context:\n${context}\n
+Starting point: "${input}"
+
+Please provide:
+1. Simple Japanese expressions to expand the idea
+2. Common team discussion phrases
+3. Polite ways to agree/disagree
+4. Cultural context about Japanese group decision-making
+
+Include pronunciation help and example sentences.`;
   }
 
   return `${background}\n\n${selfIntroduction}\n\n${basePrompt}`;
@@ -208,6 +269,36 @@ async function makeRequestWithRetry(url, data, retries, delay) {
 </script>
 
 <style scoped>
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.right-2 {
+  right: 0.5rem;
+}
+
+.top-2 {
+  top: 0.5rem;
+}
+
+.va-button--small {
+  padding: 4px 8px;
+  font-size: 0.875rem;
+  border-color: transparent;
+  color: rgb(21, 78, 193);
+  background: transparent;
+  --va-background-color: #154EC1;
+  --va-background-color-opacity: 0;
+  --va-background-mask-color: transparent;
+  --va-background-mask-opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
 .prompt-display {
   display: flex;
   flex-direction: column;
@@ -241,10 +332,25 @@ async function makeRequestWithRetry(url, data, retries, delay) {
 .response {
   background-color: #f8f9fa;
   padding: 20px;
+  padding-right: 60px;
   border-radius: 5px;
   word-wrap: break-word;
 }
 .response > pre {
   white-space: pre-wrap;
+}
+
+.debug-info {
+  background-color: #f0f0f0;
+  padding: 15px;
+  padding-right: 60px;
+  border-radius: 5px;
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.debug-info pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 </style>
