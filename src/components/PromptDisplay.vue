@@ -141,7 +141,7 @@ async function askChatGPT(purpose) {
         content: generatePrompt(state.prompt, purpose, conversationHistory),
       },
     ],
-    max_tokens: 256,
+    max_tokens: 400,
     temperature: 0.7,
   };
 
@@ -184,71 +184,84 @@ async function askChatGPT(purpose) {
 }
 
 function generatePrompt(input, purpose, history) {
-  const background = `We are playing a desert survival game where participants rank essential items and work towards a unified team decision.`;
-  const selfIntroduction = `I am a non-native speaker participating in this discussion.`;
-
-  const context =
-    history.length > 0
-      ? history.map((msg) => `${msg.role}: ${msg.content}`).join("\n")
-      : "No previous conversation.";
-
-  // 言語レベルを固定値として設定
-  const userJapaneseLevel = "intermediate";
-
-  let basePrompt = "";
+  const context = history.length > 0
+    ? history.map((msg) => `${msg.role}: ${msg.content}`).join("\n")
+    : "No previous conversation.";
 
   switch (purpose) {
-    case "languageSupport":
-      return `You are a Japanese language assistant for non-native speakers. Context:\n${context}\n
-Given this input: "${input}"
+    case "LanguageSupport":
+      return `You are a Japanese language assistant for non-native speakers in a desert survival game discussion.
 
-REQUIRED FORMAT:
-1. If input is English:
-   - Provide natural Japanese translation
-   - Add pronunciation (furigana) for kanji
-   - Suggest common phrases used in Japanese discussions
-   
-2. If input is Japanese:
-   - Confirm the meaning in simple English
-   - Explain key grammar points
-   - Provide cultural context for business/group discussion
+Context: ${context}
+Input: "${input}"
 
-3. Additional Support:
-   - Suggest polite alternatives if needed
-   - Explain any context-specific vocabulary
-   - Highlight common mistakes to avoid
+REQUIRED OUTPUT FORMAT:
+1. 日本語表現:
+   [基本]: <日本語での自然な表現>
+   [丁寧]: <ビジネス場面での丁寧な表現>
+   [発音]: <ふりがな>
 
-Keep explanations clear and suitable for ${userJapaneseLevel} Japanese learners.`;
+2. English Support:
+   [Translation]: <Natural English equivalent>
+   [Key Phrases]: <Useful related expressions>
+   [Cultural Note]: <Relevant cultural context>
 
-    case "logicalSupport":
-      return `You are helping structure opinions for a Japanese discussion. Context:\n${context}\n
-Given this input: "${input}"
+DO NOT:
+- Add commentary about the game
+- Include personal opinions
+- Deviate from this format`;
 
-Please help format the opinion in Japanese business style:
-1. 結論から言う (Start with conclusion)
-2. 理由を挙げる (Give reasons)
-3. 具体例を示す (Provide examples)
-4. まとめる (Summarize)
+    case "LogicalSupport":
+      return `You are a discussion structure assistant for Japanese language learners.
 
-Include:
-- Simple Japanese patterns for each section
-- Key phrases for expressing opinions politely
-- Cultural notes about Japanese discussion style`;
+Context: ${context}
+Input: "${input}"
 
-    case "elaborateSupport":
-      return `You are helping develop ideas in Japanese. Context:\n${context}\n
-Starting point: "${input}"
+REQUIRED OUTPUT FORMAT:
+1. 日本語での論理構成:
+   結論: <主張を簡潔に>
+   根拠: <理由を箇条書きで>
+   例示: <具体例を1-2つ>
+   まとめ: <結論の補強>
 
-Please provide:
-1. Simple Japanese expressions to expand the idea
-2. Common team discussion phrases
-3. Polite ways to agree/disagree
-4. Cultural context about Japanese group decision-making
+2. English Structure:
+   Main Point: <Clear position>
+   Evidence: <Supporting reasons>
+   Examples: <Specific cases>
+   Conclusion: <Reinforced point>
 
-Include pronunciation help and example sentences.`;
+DO NOT:
+- Add unrelated information
+- Include personal opinions
+- Deviate from this format`;
+
+    case "ElaborateSupport":
+      return `You are an idea development assistant for Japanese language learners.
+
+Context: ${context}
+Input: "${input}"
+
+REQUIRED OUTPUT FORMAT:
+1. 日本語での展開:
+   主張: <基本的な意見>
+   補足: <追加情報>
+   視点: <関連する観点>
+   表現: <討論用フレーズ>
+
+2. English Development:
+   Core: <Main opinion>
+   Details: <Additional information>
+   Perspectives: <Related viewpoints>
+   Phrases: <Discussion expressions>
+
+DO NOT:
+- Change the original meaning
+- Include personal opinions
+- Deviate from this format`;
+
+    default:
+      return "";
   }
-
-  return `${background}\n\n${selfIntroduction}\n\n${basePrompt}`;
 }
 
 async function makeRequestWithRetry(url, data, retries, delay) {
