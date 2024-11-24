@@ -10,7 +10,7 @@
   "dependencies": {
     "@achrinza/node-ipc": "^10.1.11",
     "@carbon/icons-vue": "^10.93.1",
-    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-build-classic": "^43.3.1",
     "@ckeditor/ckeditor5-vue": "^5.1.0",
     "@gtm-support/vue-gtm": "^3.0.1",
     "@mdi/js": "^7.4.47",
@@ -32,7 +32,16 @@
     "vuestic-admin": "^0.0.1-security",
     "vuestic-ui": "^1.9.11",
     "vuex": "^4.1.0",
-    "ws": "^8.17.1"
+    "ws": "^8.17.1",
+    "body-parser": "^1.20.3",
+    "cookie": "^0.7.0",
+    "cross-spawn": "^7.0.5",
+    "http-proxy-middleware": "^2.0.7",
+    "micromatch": "^4.0.8",
+    "path-to-regexp": "^0.1.10",
+    "send": "^0.19.0",
+    "serve-static": "^1.16.0",
+    "webpack": "^5.93.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.7",
