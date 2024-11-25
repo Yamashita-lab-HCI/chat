@@ -41,8 +41,8 @@
           <li>
             Group discussion:
             <ul>
-              <li>Practice task: 5 minutes</li>
-              <li>Main tasks: 10 minutes each</li>
+              <li>Practice task: 15 minutes</li>
+              <li>Main tasks: 15 minutes each</li>
             </ul>
           </li>
         </ol>
@@ -58,6 +58,8 @@
           <li>Cigarette lighter (with fluid)</li>
           <li>Extra shirt and pants for each survivor</li>
           <li>A compass</li>
+          <li>A large, thick tarp</li>
+          <li>A first aid kit</li>
         </ul>
 
         <h4 class="va-h4">Ocean Survival Task (Main Task)</h4>
@@ -122,8 +124,8 @@
           <li>
             グループディスカッション：
             <ul>
-              <li>練習タスク：5分間</li>
-              <li>メインタスク：10分間</li>
+              <li>練習タスク：15分間</li>
+              <li>メインタスク：15分間</li>
             </ul>
           </li>
         </ol>
@@ -137,6 +139,8 @@
           <li>ライター（燃料あり）</li>
           <li>各生存者用の予備のシャツとズボン</li>
           <li>コンパス</li>
+          <li>大きくて厚い防水シート</li>
+          <li>救急キット</li>
         </ul>
 
         <h4 class="va-h4">海洋サバイバルタスク（メインタスク）</h4>

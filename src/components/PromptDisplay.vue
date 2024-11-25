@@ -21,9 +21,9 @@
       <VaButton class="mr-6 mb-2" @click="() => askChatGPT('ElaborateSupport')">
         Elaborate Support
       </VaButton>
-      <VaButton class="mr-6 mb-2" @click="showContext">
+      <!--<VaButton class="mr-6 mb-2" @click="showContext">
         Show Context
-      </VaButton>
+      </VaButton>-->
       <!-- <VaButton class="mr-6 mb-2" @click="() => askChatGPT('keywords')">
         Keyword
       </VaButton> -->
@@ -83,7 +83,7 @@ const state = reactive({
 });
 
 // context確認用の関数を追加
-function showContext() {
+/* function showContext() {
   const conversationHistory = messages.value
     .filter((msg) => msg && msg.text)
     .map((msg) => ({
@@ -100,7 +100,7 @@ function showContext() {
   }, null, 2);
   
   state.showDebug = true;
-}
+} */
 
 const API_KEY = process.env.VUE_APP_API_KEY;
 const http = axios.create({
