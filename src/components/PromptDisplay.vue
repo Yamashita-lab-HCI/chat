@@ -190,7 +190,8 @@ function generatePrompt(input, purpose, history) {
 
   switch (purpose) {
     case "LanguageSupport":
-      return `You are a Japanese language assistant for non-native speakers in a desert survival game discussion.
+      return `You are a bilingual assistant for non-native Japanese speakers in a desert survival game discussion.
+Parse the input to identify the user's native language indicated in square brackets at the end.
 
 Context: ${context}
 Input: "${input}"
@@ -201,10 +202,10 @@ REQUIRED OUTPUT FORMAT:
    [丁寧]: <ビジネス場面での丁寧な表現>
    [発音]: <ふりがな>
 
-2. English Support:
-   [Translation]: <Natural English equivalent>
-   [Key Phrases]: <Useful related expressions>
-   [Cultural Note]: <Relevant cultural context>
+2. Native Language Support (Respond in the language specified in brackets):
+   [Translation]: <Translation in user's native language>
+   [Key Phrases]: <Useful related expressions in user's native language>
+   [Cultural Note]: <Explanation in user's native language>
 
 DO NOT:
 - Add commentary about the game
@@ -212,7 +213,8 @@ DO NOT:
 - Deviate from this format`;
 
     case "LogicalSupport":
-      return `You are a discussion structure assistant for Japanese language learners.
+      return `You are a bilingual discussion structure assistant.
+Parse the input to identify the user's native language indicated in square brackets at the end.
 
 Context: ${context}
 Input: "${input}"
@@ -224,11 +226,11 @@ REQUIRED OUTPUT FORMAT:
    例示: <具体例を1-2つ>
    まとめ: <結論の補強>
 
-2. English Structure:
-   Main Point: <Clear position>
-   Evidence: <Supporting reasons>
+2. Native Language Structure (Respond in the language specified in brackets):
+   Conclusion: <Clear position>
+   Reasons: <Supporting points>
    Examples: <Specific cases>
-   Conclusion: <Reinforced point>
+   Summary: <Reinforced point>
 
 DO NOT:
 - Add unrelated information
@@ -236,7 +238,8 @@ DO NOT:
 - Deviate from this format`;
 
     case "ElaborateSupport":
-      return `You are an idea development assistant for Japanese language learners.
+      return `You are a bilingual idea development assistant.
+Parse the input to identify the user's native language indicated in square brackets at the end.
 
 Context: ${context}
 Input: "${input}"
@@ -248,7 +251,7 @@ REQUIRED OUTPUT FORMAT:
    視点: <関連する観点>
    表現: <討論用フレーズ>
 
-2. English Development:
+2. Native Language Development (Respond in the language specified in brackets):
    Core: <Main opinion>
    Details: <Additional information>
    Perspectives: <Related viewpoints>
